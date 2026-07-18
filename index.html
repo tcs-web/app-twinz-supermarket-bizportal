@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twinz Supermarket - GOD TIER STOCK</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+:root{
+  --bg:#030712;--card:#0f172a;--accent:#22c55e;--red:#ef4444;--blue:#3b82f6;--orange:#f97316;--purple:#a855f7;
+  --text:#f8fafc;--muted:#94a3b8;--border:#1e293b;--glass:rgba(15,23,42,0.7);
+}
+*{box-sizing:border-box;font-family:'Inter',sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);padding-bottom:200px}
+.header{background:linear-gradient(135deg,#22c55e,#16a34a);padding:25px;text-align:center;color:#000;position:relative}
+.header h1{margin:0;font-weight:900}
+.logo{width:80px;height:80px;border-radius:15px;background:#fff;padding:5px;margin:0 auto 10px}
+.sync{position:fixed;top:10px;right:10px;background:var(--accent);color:#000;padding:5px 10px;border-radius:20px;font-size:10px;font-weight:800;z-index:999}
+.alert{position:fixed;top:50px;right:10px;background:var(--red);color:#fff;padding:8px 12px;border-radius:10px;font-size:11px;z-index:998;display:none}
+.container{padding:15px;max-width:1100px;margin:0 auto}
+.admin{background:var(--glass);backdrop-filter:blur(10px);padding:15px;border-radius:15px;margin:20px 0;border:1px solid var(--border)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}
+.card{background:var(--card);padding:15px;border-radius:15px;border:1px solid var(--border);position:relative}
+.card img{width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:8px}
+.card h3{margin:5px 0;color:var(--accent);font-size:16px}
+.badge{position:absolute;top:10px;right:10px;background:var(--orange);padding:3px 8px;border-radius:10px;font-size:9px;font-weight:800}
+.stock{font-size:12px;color:var(--muted)}
+.stock.high{color:var(--accent)}.stock.low{color:var(--red)}
+.price{font-size:20px;font-weight:800;color:var(--accent)}
+.btn{background:var(--accent);color:#000;border:none;padding:10px;border-radius:10px;font-weight:800;width:100%;margin-top:8px;cursor:pointer}
+.btn-red{background:var(--red);color:#fff}.btn-blue{background:var(--blue);color:#fff}.btn-purple{background:var(--purple);color:#fff}
+input,textarea,select{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:1px solid var(--border);background:#020617;color:var(--text)}
+.cart{position:fixed;bottom:0;left:0;right:0;background:var(--glass);backdrop-filter:blur(20px);padding:15px;border-top:2px solid var(--accent);display:none}
+.cart-item{display:flex;justify-content:space-between;padding:8px;background:#1e293b;border-radius:8px;margin-bottom:5px;font-size:13px}
+#scanner{width:100%;border-radius:10px;margin:10px 0}
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tab{padding:8px 12px;background:#1e293b;border-radius:8px;cursor:pointer;font-size:12px}
+.tab.active{background:var(--accent);color:#000}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+
+<div class="sync" id="sync">🟡 Connecting...</div>
+<div class="alert" id="alertBox"></div>
+
+<div class="header">
+  <img src="https://files.catbox.moe/0zympr.jpeg" class="logo">
+  <h1>TWINZ SUPERMARKET</h1>
+  <p id="sub">Fresh Food • Drinks • Groceries</p>
+</div>
+
+<div class="container">
+  <div class="admin" id="adminPanel">
+    <h3>⚙️ Admin - GOD TIER CONTROL</h3>
+    <div id="login">
+      <input type="email" id="email" placeholder="Admin Email">
+      <input type="password" id="pass" placeholder="Password">
+      <button class="btn btn-blue" onclick="login()">Login</button>
+    </div>
+
+    <div id="controls" style="display:none">
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('products')">Products</div>
+        <div class="tab" onclick="showTab('scanner')">Barcode Scanner</div>
+        <div class="tab" onclick="showTab('reports')">Reports</div>
+      </div>
+
+      <div id="tab-products">
+        <button class="btn-red" onclick="logout()">Logout</button>
+        <button class="btn" onclick="copyLink()">📤 Copy Client Link</button>
+        <button class="btn-purple" onclick="checkLowStock()">🔔 Check Low Stock</button>
+        <input type="text" id="clientLink" readonly style="display:none;margin-top:5px">
+
+        <h4 style="color:var(--orange)">➕ Add/Edit Product</h4>
+        <input type="text" id="pBarcode" placeholder="Barcode - Scan or Type">
+        <input type="text" id="pName" placeholder="Product Name - e.g. Coca Cola 500ml">
+        <select id="pCat">
+          <option>Food</option><option>Drinks</option><option>Groceries</option><option>Snacks</option>
+        </select>
+        <input type="text" id="pImg" placeholder="Catbox Image URL">
+        <input type="number" id="pPrice" placeholder="Price R">
+        <input type="number" id="pStock" placeholder="Stock Qty">
+        <input type="number" id="pMin" placeholder="Min Stock Alert - e.g. 5">
+        <button class="btn" onclick="saveProduct()">💾 Save Product</button>
+        <div id="productList" style="margin-top:10px"></div>
+      </div>
+
+      <div id="tab-scanner" style="display:none">
+        <h4>📷 Barcode Scanner - Stock Take</h4>
+        <div id="scanner"></div>
+        <button class="btn" onclick="startScanner()">Start Camera</button>
+        <button class="btn-red" onclick="stopScanner()">Stop Camera</button>
+        <p>Scanned: <b id="lastScan">None</b></p>
+        <input type="number" id="addStock" placeholder="Add Stock Qty">
+        <button class="btn" onclick="updateStockFromScan()">+ Add Stock</button>
+      </div>
+
+      <div id="tab-reports" style="display:none">
+        <h4>📊 Sales Report</h4>
+        <button class="btn-purple" onclick="generateReport()">⬇️ Download PDF Report</button>
+        <p style="font-size:12px;color:var(--muted)">Report includes: Total Products, Low Stock, Total Stock Value</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="color:var(--accent)">🛒 PRODUCTS</h2>
+  <input type="text" id="search" placeholder="🔍 Search products..." onkeyup="searchProducts()">
+  <div class="grid" id="productGrid"></div>
+</div>
+
+<div class="cart" id="cartBox">
+  <h3>Cart: <span id="cartCount">0</span> items | Total: R<span id="cartTotal">0</span></h3>
+  <div id="cartItems"></div>
+  <button class="btn" onclick="checkout()">📱 Order via WhatsApp</button>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, set, onValue, remove, get, child } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+const { jsPDF } = window.jspdf;
+const firebaseConfig = {
+  apiKey: "AIzaSyDhfEqzN7W2BMEgL8k94CHVtk9wEa3o5Y8",
+  authDomain: "app-twinz-cooperate-services.firebaseapp.com",
+  databaseURL: "https://app-twinz-cooperate-services-default-rtdb.firebaseio.com",
+  projectId: "app-twinz-cooperate-services"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+const productsRef = ref(db, 'supermarket/products');
+
+let products = {};
+let cart = [];
+let html5QrCode;
+let scannedId = null;
+const isClient = window.location.search.includes('client=true');
+
+if(isClient){
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('sub').innerText = 'Shop Online - Delivery Available';
+}
+
+window.showTab = (tab) => {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-products').style.display = tab=='products'?'block':'none';
+  document.getElementById('tab-scanner').style.display = tab=='scanner'?'block':'none';
+  document.getElementById('tab-reports').style.display = tab=='reports'?'block':'none';
+}
+
+window.login = () => {
+  signInWithEmailAndPassword(auth, email.value, pass.value)
+.then(()=>{login.style.display='none'; controls.style.display='block'})
+.catch(e=>alert(e.message))
+}
+window.logout = () => {signOut(auth); login.style.display='block'; controls.style.display='none'}
+
+onAuthStateChanged(auth, u => {
+  if(!isClient && u){login.style.display='none'; controls.style.display='block'}
+});
+
+window.copyLink = () => {
+  let link = window.location.href.split('?')[0] + '?client=true';
+  clientLink.value = link; clientLink.style.display='block'; clientLink.select(); document.execCommand('copy');
+  alert('Client link copied!')
+}
+
+onValue(productsRef, snap => {
+  products = snap.val() || {};
+  renderProducts();
+  buildAdminList();
+  document.getElementById('sync').innerText = '🟢 Connected';
+  checkLowStockSilent();
+})
+
+function renderProducts(filter=''){
+  productGrid.innerHTML = '';
+  Object.entries(products).filter(([id,p])=>p.name.toLowerCase().includes(filter.toLowerCase())).forEach(([id,p])=>{
+    let stockClass = p.stock > p.min? 'high' : p.stock > 0? 'low' : 'low';
+    let lowBadge = p.stock <= p.min && p.stock > 0? `<div class="badge">LOW STOCK</div>` : '';
+    productGrid.innerHTML += `
+      <div class="card">
+        ${lowBadge}
+        <img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}">
+        <h3>${p.name}</h3>
+        <p style="font-size:11px;color:var(--muted)">${p.category} | Barcode: ${p.barcode}</p>
+        <div class="price">R${p.price}</div>
+        <div class="stock ${stockClass}">Stock: ${p.stock}</div>
+        ${isClient && p.stock > 0? `<button class="btn" onclick="addCart('${id}')">Add to Cart</button>` : p.stock == 0? `<button class="btn btn-red" disabled>Out of Stock</button>` : ''}
+      </div>
+    `;
+  })
+}
+
+window.searchProducts = () => renderProducts(search.value);
+
+function buildAdminList(){
+  productList.innerHTML = '';
+  Object.entries(products).forEach(([id,p])=>{
+    productList.innerHTML += `
+      <div style="background:#1e293b;padding:8px;border-radius:8px;margin:5px 0;font-size:12px">
+        <b>${p.name}</b> - R${p.price} - Qty: ${p.stock} - Min: ${p.min}
+        <button onclick="loadProduct('${id}')" style="float:right">Edit</button>
+        <button onclick="delProduct('${id}')" style="float:right;margin-right:5px" class="btn-red">Del</button>
+      </div>
+    `;
+  })
+}
+
+window.saveProduct = () => {
+  let id = pBarcode.value || Date.now().toString();
+  let data = {
+    barcode:pBarcode.value, name:pName.value, category:pCat.value, img:pImg.value,
+    price:parseInt(pPrice.value), stock:parseInt(pStock.value), min:parseInt(pMin.value)||5
+  };
+  set(ref(db, 'supermarket/products/' + id), data).then(()=>alert('✅ Saved!'));
+  [pBarcode,pName,pCat,pImg,pPrice,pStock,pMin].forEach(i=>i.value='');
+}
+
+window.delProduct = (id) => {
+  if(confirm('Delete?')) remove(ref(db, 'supermarket/products/' + id))
+}
+
+window.loadProduct = (id) => {
+  let p = products[id];
+  pBarcode.value=p.barcode; pName.value=p.name; pCat.value=p.category; pImg.value=p.img;
+  pPrice.value=p.price; pStock.value=p.stock; pMin.value=p.min;
+}
+
+window.addCart = (id) => {
+  let p = products[id];
+  let item = cart.find(x=>x.id==id);
+  if(item){item.qty++; item.total = item.qty * p.price}
+  else{cart.push({id,name:p.name,price:p.price,qty:1,total:p.price})}
+  set(ref(db, 'supermarket/products/' + id + '/stock'), p.stock - 1);
+  updateCart();
+}
+
+function updateCart(){
+  cartBox.style.display = cart.length? 'block' : 'none';
+  cartCount.innerText = cart.reduce((a,b)=>a+b.qty,0);
+  cartTotal.innerText = cart.reduce((a,b)=>a+b.total,0);
+  cartItems.innerHTML = cart.map(i=>`<div class="cart-item">${i.name} x${i.qty} - R${i.total}</div>`).join('')
+}
+
+window.checkout = () => {
+  let msg = `Hello Twinz Supermarket, my order:\n\n` + cart.map(i=>`• ${i.name} x${i.qty} = R${i.total}`).join('\n');
+  msg += `\n\nTotal: R${cartTotal.innerText}\nName:\nAddress:\nPhone:`;
+  window.open(`https://wa.me/27682547352?text=${encodeURIComponent(msg)}`)
+}
+
+// BARCODE SCANNER
+window.startScanner = () => {
+  html5QrCode = new Html5Qrcode("scanner");
+  html5QrCode.start({facingMode:"environment"}, {fps:10}, (decodedText)=>{
+    scannedId = decodedText;
+    lastScan.innerText = decodedText;
+    alert('Scanned: ' + decodedText);
+  });
+}
+window.stopScanner = () => {if(html5QrCode) html5QrCode.stop()}
+
+window.updateStockFromScan = () => {
+  if(!scannedId) return alert('Scan a product first');
+  let add = parseInt(addStock.value);
+  if(!add) return alert('Enter qty to add');
+  let newStock = (products[scannedId]?.stock || 0) + add;
+  set(ref(db, 'supermarket/products/' + scannedId + '/stock'), newStock).then(()=>alert('Stock Updated!'));
+  addStock.value='';
+}
+
+// LOW STOCK ALERTS
+function checkLowStockSilent(){
+  let low = Object.values(products).filter(p=>p.stock <= p.min && p.stock > 0);
+  if(low.length > 0){
+    alertBox.style.display='block';
+    alertBox.innerText = `⚠️ ${low.length} items low on stock!`;
+    setTimeout(()=>alertBox.style.display='none',4000);
+  }
+}
+window.checkLowStock = () => {
+  let low = Object.values(products).filter(p=>p.stock <= p.min);
+  alert(low.length? low.map(p=>`${p.name}: ${p.stock}`).join('\n') : 'All stock levels are good!');
+}
+
+// SALES REPORT PDF
+window.generateReport = () => {
+  const doc = new jsPDF();
+  let totalValue = 0;
+  let totalItems = 0;
+  let lowStock = [];
+
+  Object.values(products).forEach(p=>{
+    totalValue += p.price * p.stock;
+    totalItems += p.stock;
+    if(p.stock <= p.min) lowStock.push(p);
+  });
+
+  doc.setFontSize(18);
+  doc.text("Twinz Supermarket - Stock Report", 14, 20);
+  doc.setFontSize(11);
+  doc.text(`Date: ${new Date().toLocaleDateString('en-ZA')}`, 14, 30);
+  doc.text(`Total Products: ${Object.keys(products).length}`, 14, 40);
+  doc.text(`Total Stock Items: ${totalItems}`, 14, 50);
+  doc.text(`Total Stock Value: R${totalValue}`, 14, 60);
+
+  doc.text("Low Stock Items:", 14, 75);
+  lowStock.forEach((p,i)=>doc.text(`- ${p.name}: ${p.stock}`, 14, 85 + i*7));
+
+  doc.save(`TwinzReport_${Date.now()}.pdf`);
+}
+</script>
+</body>
+</html>
