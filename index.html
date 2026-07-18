@@ -104,6 +104,7 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
 
       <div id="tab-products">
         <h3>➕ Add Product</h3>
+        <button class="btn-purple" onclick="addDemoProducts()" style="margin-bottom:10px">⚡ Add 5 Demo Products</button>
         <input type="text" id="pName" placeholder="Product Name">
         <select id="pCat"><option>Food</option><option>Drinks</option><option>Groceries</option><option>Snacks</option></select>
         <input type="text" id="pImg" placeholder="Catbox Image URL">
@@ -215,13 +216,13 @@ onAuthStateChanged(auth, user => {
     currentUser = user;
     loginScreen.style.display = 'none';
     app.style.display = 'block';
-    // get role
+    // get role - FIXED: onlyOnce to prevent loop
     onValue(ref(db, 'bizportal/users/' + user.uid + '/role'), snap=>{
       currentRole = snap.val() || 'admin';
       document.getElementById('userRole').innerText = currentRole.toUpperCase();
       document.getElementById('userRole').className = 'role-badge role-' + currentRole;
-      if(currentRole == 'admin'){document.getElementById('tab-users').style.display='none'}
-    })
+      document.getElementById('tab-users').style.display = currentRole == 'admin' ? 'none' : 'block';
+    }, {onlyOnce: true})
   } else {
     loginScreen.style.display = 'block';
     app.style.display = 'none';
@@ -251,6 +252,11 @@ onValue(ordersRef, snap => {
 
 function renderProducts(){
   productGrid.innerHTML = '';
+  // FIX: Show message if no products
+  if(Object.keys(products).length === 0){
+    productGrid.innerHTML = `<p style="text-align:center;color:var(--muted);grid-column:1/-1">No products yet. Login as Manager/CEO and click "Add Demo Products"</p>`
+    return;
+  }
   Object.entries(products).filter(([id,p])=>{
     let matchCat = currentFilter == 'All' || p.category == currentFilter;
     let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());
@@ -301,6 +307,10 @@ function buildStockList(){
 
 function buildOrdersList(orders){
   ordersList.innerHTML = '';
+  if(Object.keys(orders).length === 0){
+    ordersList.innerHTML = `<p style="color:var(--muted)">No orders yet</p>`;
+    return;
+  }
   Object.entries(orders).reverse().forEach(([id,o])=>{
     ordersList.innerHTML += `
       <div class="order-card">
@@ -314,7 +324,7 @@ function buildOrdersList(orders){
 }
 
 function buildReportStats(){
-  let totalValue = Object.values(products).reduce((a,p)=>a+p.price*p.stock,0);
+  let totalValue = Object.values(products).reduce((a,p)=>a+(p.price*p.stock||0),0);
   reportStats.innerHTML = `
     <p><b>Total Products:</b> ${Object.keys(products).length}</p>
     <p><b>Total Stock Value:</b> R${totalValue}</p>
@@ -339,6 +349,23 @@ window.saveProduct = () => {
   };
   set(ref(db, 'bizportal/products/' + id), data);
   [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
+}
+
+// NEW: Add Demo Products Button
+window.addDemoProducts = () => {
+  if(currentRole == 'admin') return alert('No permission');
+  const demo = [
+    {name:"White Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Coca Cola 2L", category:"Drinks", price:25, oldPrice:30, stock:100, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Rice 5kg", category:"Groceries", price:120, oldPrice:150, stock:30, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Simba Chips", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Milk 1L", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"}
+  ];
+  demo.forEach(p=>{
+    let id = Date.now().toString() + Math.random();
+    set(ref(db, 'bizportal/products/' + id), p);
+  });
+  alert('5 Demo products added!')
 }
 
 window.deleteProduct = (id) => {
@@ -371,10 +398,8 @@ window.checkout = () => {
   let phone = prompt("Enter your WhatsApp number:");
   if(!customer) return;
   
-  // PAYMENT SIMULATION - Replace with Paystack/Yoco link
   let payLink = `https://wa.me/27682547352?text=Payment for R${cartTotal.innerText}`;
   
-  // SAVE ORDER
   let orderData = {
     customer, phone, 
     items: cart,
@@ -384,7 +409,6 @@ window.checkout = () => {
   };
   push(ordersRef, orderData);
   
-  // WHATSAPP ORDER
   let msg = `New Order from ${customer}\n` + cart.map(i=>`${i.name} x${i.qty} = R${i.qty*i.price}`).join('\n');
   msg += `\nTotal: R${cartTotal.innerText}\nPay here: ${payLink}`;
   window.open(`https://wa.me/27682547352?text=${encodeURIComponent(msg)}`);
