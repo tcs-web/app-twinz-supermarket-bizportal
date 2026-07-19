@@ -5,7 +5,7 @@
 <title>Twinz Supermarket Bizportal</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-:root{--bg:#f5f5f5;--card:#fff;--accent:#ff4747;--accent2:#ff9500;--green:#00b894;--blue:#0984e3;--purple:#6c5ce7;--text:#2d3436;--muted:#636e72;--border:#dfe6e9;--shadow:0 2px 8px rgba(0,0,0,0.1)}
+:root{--bg:#f5f5f5;--card:#fff;--accent:#ff4747;--accent2:#ff9500;--green:#00b894;--blue:#0984e3;--purple:#6c5ce7;--text:#2d3436;--muted:#636e72;--border:#dfe6e9;--shadow:0 2px 8px rgba(0,0,0,0.1);--danger:#d63031}
 *{box-sizing:border-box;font-family:'Poppins',sans-serif}body{margin:0;background:var(--bg);color:var(--text)}
 .header{background:linear-gradient(90deg,#ff4747,#ff9500);padding:12px;color:#fff;position:sticky;top:0;z-index:99;box-shadow:var(--shadow)}
 .header-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.logo{width:45px;height:45px;border-radius:10px;background:#fff;padding:4px}
@@ -22,22 +22,28 @@
 .price{color:var(--accent);font-weight:800;font-size:16px}
 .old-price{text-decoration:line-through;color:var(--muted);font-size:11px}
 .stock{font-size:10px;color:var(--green)}
+.stock-low{color:var(--danger);font-weight:700}
 .btn-cart{background:var(--accent);color:#fff;border:none;width:100%;padding:8px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:5px}
 .admin{background:#fff;padding:15px;border-radius:12px;margin:15px 0;box-shadow:var(--shadow)}
 .login-box{max-width:400px;margin:40px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:var(--shadow)}
 .login-box h2{text-align:center;color:var(--accent)}
 .role-badge{padding:4px 10px;border-radius:15px;font-size:10px;font-weight:800;color:#fff}
 .role-ceo{background:var(--purple)}.role-manager{background:var(--blue)}.role-admin{background:var(--green)}
-.tabs{display:flex;gap:8px;border-bottom:2px solid var(--border);margin-bottom:15px}
-.tab{padding:10px 15px;cursor:pointer;font-weight:600}
+.tabs{display:flex;gap:8px;border-bottom:2px solid var(--border);margin-bottom:15px;overflow-x:auto}
+.tab{padding:10px 15px;cursor:pointer;font-weight:600;white-space:nowrap}
 .tab.active{border-bottom:3px solid var(--accent);color:var(--accent)}
 input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border);border-radius:8px}
 .btn{background:var(--accent);color:#fff;border:none;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer}
-.btn-blue{background:var(--blue)}.btn-green{background:var(--green)}.btn-purple{background:var(--purple)}.btn-gray{background:var(--muted)}
+.btn-blue{background:var(--blue)}.btn-green{background:var(--green)}.btn-purple{background:var(--purple)}.btn-gray{background:var(--muted)}.btn-danger{background:var(--danger)}
 .cart-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px;box-shadow:0 -2px 10px rgba(0,0,0,0.2);display:none;z-index:100}
 .loading{text-align:center;padding:40px}
 .error{color:var(--accent);text-align:center;padding:10px}
-@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+.admin-search{margin:10px 0 15px 0}
+.order-card{background:#fff;padding:12px;border-radius:10px;margin:10px 0;border-left:4px solid var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px}
+.stat-card{background:linear-gradient(135deg,#ff4747,#ff9500);color:#fff;padding:15px;border-radius:10px;text-align:center}
+.stat-card h4{margin:0;font-size:24px}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -74,13 +80,26 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
 
     <div class="admin" id="adminPanel">
       <div class="tabs">
-        <div class="tab active" onclick="showTab('products', this)">Products</div>
+        <div class="tab active" onclick="showTab('dashboard', this)">Dashboard</div>
+        <div class="tab" onclick="showTab('products', this)">Products</div>
         <div class="tab" onclick="showTab('stock', this)">Stock Control</div>
+        <div class="tab" onclick="showTab('orders', this)">Orders</div>
         <div class="tab" id="usersTab" onclick="showTab('users', this)">Users</div>
         <div class="tab" onclick="showTab('reports', this)">Reports</div>
       </div>
 
-      <div id="tab-products">
+      <div id="tab-dashboard">
+        <h3>📊 Dashboard</h3>
+        <div class="stats">
+          <div class="stat-card"><h4 id="statProducts">0</h4><small>Total Products</small></div>
+          <div class="stat-card"><h4 id="statStock">0</h4><small>Total Stock</small></div>
+          <div class="stat-card"><h4 id="statOrders">0</h4><small>Pending Orders</small></div>
+        </div>
+        <h4>⚠️ Low Stock Alert</h4>
+        <div id="lowStockList"></div>
+      </div>
+
+      <div id="tab-products" style="display:none">
         <h3 id="formTitle">➕ Add Product</h3>
         <button class="btn-purple" onclick="seedDatabase()">⚡ Add Default Products</button>
         <input type="text" id="pName" placeholder="Product Name">
@@ -93,20 +112,29 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
           <button class="btn" id="saveBtn" onclick="saveProduct()" style="flex:1">Save Product</button>
           <button class="btn-gray" id="cancelBtn" onclick="cancelEdit()" style="flex:1;display:none">Cancel</button>
         </div>
-        <div id="productList" style="margin-top:15px"></div>
+
+        <h3 style="margin-top:20px">📋 Manage Products</h3>
+        <input type="text" id="adminSearch" class="admin-search" placeholder="🔍 Search to find product to Edit/Delete..." onkeyup="buildProductList()">
+        <div id="productList"></div>
       </div>
 
       <div id="tab-stock" style="display:none">
         <h3>📦 Stock Management</h3><div id="stockList"></div>
       </div>
 
+      <div id="tab-orders" style="display:none">
+        <h3>📦 Customer Orders</h3><div id="ordersList">Loading orders...</div>
+      </div>
+
       <div id="tab-users" style="display:none">
         <h3>👥 Users & Roles</h3>
-        <p><b>CEO:</b> Full access - Add/Edit/Delete</p><p><b>Manager:</b> Add/Edit/Delete</p><p><b>Admin:</b> Update stock only</p>
+        <p><b>CEO:</b> Full access - Add/Edit/Delete/Orders</p><p><b>Manager:</b> Add/Edit/Delete/Orders</p><p><b>Admin:</b> Update stock only</p>
       </div>
 
       <div id="tab-reports" style="display:none">
-        <h3>📊 Reports</h3><button class="btn-purple" onclick="downloadReport()">Download PDF Report</button>
+        <h3>📊 Reports</h3>
+        <button class="btn-purple" onclick="downloadReport()">Download PDF Report</button>
+        <button class="btn-blue" onclick="downloadOrdersCSV()" style="margin-left:10px">Download Orders CSV</button>
       </div>
     </div>
 
@@ -142,12 +170,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const db = getDatabase(app);
   const auth = getAuth(app);
   const productsRef = ref(db, 'bizportal/products');
+  const ordersRef = ref(db, 'bizportal/orders');
 
   let products = {};
+  let orders = {};
   let cart = [];
   let currentUser = {role:'admin'};
   let currentFilter = 'All';
-  let editingId = null; // NEW: track what we're editing
+  let editingId = null;
 
   const loginScreen = document.getElementById('loginScreen');
   const appDiv = document.getElementById('app');
@@ -155,7 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const productGrid = document.getElementById('productGrid');
   const productList = document.getElementById('productList');
   const stockList = document.getElementById('stockList');
+  const ordersList = document.getElementById('ordersList');
+  const lowStockList = document.getElementById('lowStockList');
   const searchInput = document.getElementById('searchInput');
+  const adminSearch = document.getElementById('adminSearch');
   const cartBar = document.getElementById('cartBar');
   const cartCount = document.getElementById('cartCount');
   const cartTotal = document.getElementById('cartTotal');
@@ -171,12 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.doLogin = async () => {
     loginError.innerText = 'Logging in...';
-    try{
-      await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
-    }catch(e){loginError.innerText = 'Login failed: ' + e.message}
+    try{ await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value); }
+    catch(e){ loginError.innerText = 'Login failed: ' + e.message }
   }
 
-  window.logout = () => {signOut(auth)}
+  window.logout = () => { signOut(auth) }
 
   onAuthStateChanged(auth, async user => {
     if(user){
@@ -191,28 +223,34 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('userRole').className = 'role-badge role-' + currentUser.role;
 
       if(currentUser.role == 'admin') document.getElementById('usersTab').style.display = 'none';
-      buildProductList();
-      buildStockList();
+      buildProductList(); buildStockList(); buildOrders(); updateDashboard();
     } else {
-      loginScreen.style.display = 'block';
-      appDiv.style.display = 'none';
+      loginScreen.style.display = 'block'; appDiv.style.display = 'none';
     }
   })
 
   window.showTab = (tab, el) => {
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     el.classList.add('active');
-    ['products','stock','users','reports'].forEach(t=>{
+    ['dashboard','products','stock','orders','users','reports'].forEach(t=>{
       document.getElementById('tab-'+t).style.display = t==tab?'block':'none'
     })
   }
 
-  onValue(productsRef, snap => {
-    products = snap.val() || {};
-    renderProducts();
-    buildProductList();
-    buildStockList();
-  })
+  onValue(productsRef, snap => { products = snap.val() || {}; renderProducts(); buildProductList(); buildStockList(); updateDashboard(); })
+  onValue(ordersRef, snap => { orders = snap.val() || {}; buildOrders(); updateDashboard(); })
+
+  function updateDashboard(){
+    document.getElementById('statProducts').innerText = Object.keys(products).length;
+    document.getElementById('statStock').innerText = Object.values(products).reduce((a,b)=>a+b.stock,0);
+    document.getElementById('statOrders').innerText = Object.values(orders).filter(o=>o.status=='Pending').length;
+
+    lowStockList.innerHTML = '';
+    Object.entries(products).filter(([id,p])=>p.stock < 10).forEach(([id,p])=>{
+      lowStockList.innerHTML += `<div style="padding:8px;background:#ffe6e6;border-radius:8px;margin:5px 0"><b>${p.name}</b> - <span class="stock-low">Only ${p.stock} left!</span></div>`
+    })
+    if(lowStockList.innerHTML=='') lowStockList.innerHTML = '<p style="color:var(--green)">All stock levels good ✅</p>'
+  }
 
   function renderProducts(){
     productGrid.innerHTML = '';
@@ -230,76 +268,67 @@ document.addEventListener('DOMContentLoaded', () => {
         <img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}">
         <h4>${p.name}</h4>
         <div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div>
-        <div class="stock">In Stock: ${p.stock}</div>
+        <div class="stock ${p.stock<10?'stock-low':''}">Stock: ${p.stock}</div>
         ${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}
       </div>`;
     })
   }
 
   window.searchProducts = () => renderProducts();
-  window.filterCat = (cat) => {currentFilter=cat; renderProducts();}
+  window.filterCat = (cat) => { currentFilter=cat; renderProducts(); }
 
   function buildProductList(){
     if(currentUser.role == 'admin') return;
     productList.innerHTML = '';
-    Object.entries(products).forEach(([id,p])=>{
+    let searchTerm = adminSearch.value.toLowerCase();
+    Object.entries(products).filter(([id,p])=> p.name.toLowerCase().includes(searchTerm) ).forEach(([id,p])=>{
       productList.innerHTML += `<div style="padding:10px;border:1px solid var(--border);border-radius:8px;margin:5px 0;background:#fafafa">
         <b>${p.name}</b> - R${p.price} - Stock: ${p.stock}
         <div style="float:right;gap:5px;display:flex">
           <button onclick="editProduct('${id}')" class="btn-blue" style="padding:5px 10px;font-size:12px">Edit</button>
-          ${currentUser.role== 'ceo'? `<button onclick="deleteProduct('${id}')" class="btn" style="padding:5px 10px;font-size:12px">Del</button>` : ''}
+          ${currentUser.role== 'ceo'? `<button onclick="deleteProduct('${id}')" class="btn-danger" style="padding:5px 10px;font-size:12px">Del</button>` : ''}
         </div>
+      </div>`;
+    })
+    if(productList.innerHTML === '') productList.innerHTML = '<p style="text-align:center;color:var(--muted)">No products found</p>'
+  }
+
+  function buildOrders(){
+    if(currentUser.role == 'admin') return;
+    ordersList.innerHTML = '';
+    if(Object.keys(orders).length === 0){ ordersList.innerHTML = '<p>No orders yet</p>'; return; }
+    Object.entries(orders).reverse().forEach(([id,o])=>{
+      ordersList.innerHTML += `<div class="order-card">
+        <b>Order #${id.slice(-6)}</b> - R${o.total} - <span style="color:var(--accent)">${o.status}</span><br>
+        <small>${new Date(o.date).toLocaleString()}</small><br>
+        <small>${o.user}</small><br>
+        ${o.items.map(i=>`${i.name} x${i.qty}`).join(', ')}
       </div>`;
     })
   }
 
   window.editProduct = (id) => {
     if(currentUser.role == 'admin') return alert('No permission');
-    let p = products[id];
-    editingId = id;
-
-    pName.value = p.name;
-    pCat.value = p.category;
-    pImg.value = p.img;
-    pPrice.value = p.price;
-    pOldPrice.value = p.oldPrice;
-    pStock.value = p.stock;
-
-    formTitle.innerText = "✏️ Editing: " + p.name;
-    saveBtn.innerText = "Update Product";
-    saveBtn.style.background = "var(--blue)";
-    cancelBtn.style.display = "block";
-
+    let p = products[id]; editingId = id;
+    pName.value = p.name; pCat.value = p.category; pImg.value = p.img; pPrice.value = p.price; pOldPrice.value = p.oldPrice; pStock.value = p.stock;
+    formTitle.innerText = "✏️ Editing: " + p.name; saveBtn.innerText = "Update Product"; saveBtn.style.background = "var(--blue)"; cancelBtn.style.display = "block";
     document.getElementById('tab-products').scrollIntoView();
   }
 
   window.cancelEdit = () => {
-    editingId = null;
-    [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
-    formTitle.innerText = "➕ Add Product";
-    saveBtn.innerText = "Save Product";
-    saveBtn.style.background = "var(--accent)";
-    cancelBtn.style.display = "none";
+    editingId = null; [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
+    formTitle.innerText = "➕ Add Product"; saveBtn.innerText = "Save Product"; saveBtn.style.background = "var(--accent)"; cancelBtn.style.display = "none";
   }
 
   window.saveProduct = () => {
     if(currentUser.role == 'admin') return alert('No permission');
-
-    if(editingId){ // UPDATE MODE
-      set(ref(db, 'bizportal/products/' + editingId), {
-        name:pName.value, category:pCat.value, img:pImg.value,
-        price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value)
-      });
-      alert('Product Updated!');
-      cancelEdit();
-    } else { // ADD MODE
+    if(editingId){
+      set(ref(db, 'bizportal/products/' + editingId), { name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value) });
+      alert('Product Updated!'); cancelEdit();
+    } else {
       let id = Date.now().toString();
-      set(ref(db, 'bizportal/products/' + id), {
-        name:pName.value, category:pCat.value, img:pImg.value,
-        price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value)
-      });
-      [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
-      alert('Product Added!');
+      set(ref(db, 'bizportal/products/' + id), { name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value) });
+      [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value=''); alert('Product Added!');
     }
   }
 
@@ -307,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stockList.innerHTML = '';
     Object.entries(products).forEach(([id,p])=>{
       stockList.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0">
-        <div><b>${p.name}</b><br><small>Stock: ${p.stock}</small></div>
+        <div><b>${p.name}</b><br><small class="${p.stock<10?'stock-low':''}">Stock: ${p.stock}</small></div>
         <div><input type="number" id="stock_${id}" value="0" style="width:80px">
         <button class="btn-green" onclick="updateStock('${id}')">+ Add</button></div>
       </div>`;
@@ -326,10 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
       {name:"Simba Chips 125g", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},
       {name:"Chocolate Bar", category:"Snacks", price:12, oldPrice:15, stock:90, img:"https://files.catbox.moe/0zympr.jpeg"}
     ];
-    defaultData.forEach(p=>{
-      let id = Date.now().toString() + Math.random();
-      set(ref(db, 'bizportal/products/' + id), p);
-    });
+    defaultData.forEach(p=>{ let id = Date.now().toString() + Math.random(); set(ref(db, 'bizportal/products/' + id), p); });
     alert('8 Default products added to Firebase!')
   }
 
@@ -345,9 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addToCart = (id) => {
-    let p = products[id];
-    let item = cart.find(x=>x.id==id);
-    if(item){item.qty++} else {cart.push({id,name:p.name,price:p.price,qty:1})}
+    let p = products[id]; let item = cart.find(x=>x.id==id);
+    if(item){ item.qty++ } else { cart.push({id,name:p.name,price:p.price,qty:1}) }
     updateCart();
   }
 
@@ -360,17 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.checkout = () => {
     if(cart.length === 0) return alert('Cart empty');
     const orderId = Date.now().toString();
-    const order = {
-      user: currentUser.email,
-      items: cart,
-      total: cart.reduce((a,b)=>a+b.qty*b.price,0),
-      date: new Date().toISOString(),
-      status: 'Pending'
-    };
+    const order = { user: currentUser.email, items: cart, total: cart.reduce((a,b)=>a+b.qty*b.price,0), date: new Date().toISOString(), status: 'Pending' };
     set(ref(db, 'bizportal/orders/' + orderId), order);
-    cart.forEach(item => {
-      set(ref(db, 'bizportal/products/' + item.id + '/stock'), products[item.id].stock - item.qty);
-    });
+    cart.forEach(item => { set(ref(db, 'bizportal/products/' + item.id + '/stock'), products[item.id].stock - item.qty); });
     let msg = `Hello Twinz, my order:\n` + cart.map(i=>`${i.name} x${i.qty}`).join('\n') + `\nTotal: R${order.total}`;
     window.open(`https://wa.me/27682547352?text=${encodeURIComponent(msg)}`);
     cart = []; updateCart(); alert('Order placed!')
@@ -380,7 +397,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const doc = new jsPDF();
     doc.text("Twinz Bizportal Report", 10, 10);
     doc.text(`Total Products: ${Object.keys(products).length}`, 10, 20);
+    doc.text(`Total Stock: ${Object.values(products).reduce((a,b)=>a+b.stock,0)}`, 10, 30);
     doc.save("report.pdf");
+  }
+
+  window.downloadOrdersCSV = () => {
+    let csv = 'OrderID,Date,Customer,Total,Status,Items\n';
+    Object.entries(orders).forEach(([id,o])=>{
+      csv += `${id},${o.date},${o.user},${o.total},${o.status},"${o.items.map(i=>i.name+' x'+i.qty).join('; ')}"\n`
+    })
+    let blob = new Blob([csv], {type: 'text/csv'}); let url = URL.createObjectURL(blob);
+    let a = document.createElement('a'); a.href = url; a.download = 'orders.csv'; a.click();
   }
 });
 </script>
