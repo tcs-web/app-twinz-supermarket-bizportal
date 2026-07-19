@@ -404,13 +404,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.saveProduct = () => {
     if(currentUser.role == 'admin') return alert('No permission');
+    
+    // Safe conversion + defaults so it never breaks
+    let productData = { 
+      name: pName.value.trim(), 
+      category: pCat.value, 
+      img: pImg.value.trim() || 'https://files.catbox.moe/0zympr.jpeg', // fallback logo
+      price: Number(pPrice.value) || 0, 
+      oldPrice: Number(pOldPrice.value) || 0,  // if empty = 0 instead of NaN
+      stock: Number(pStock.value) || 0 
+    };
+
+    if(!productData.name){ return alert('Please enter product name') }
+    if(productData.price <= 0){ return alert('Please enter valid price') }
+
     if(editingId){
-      set(ref(db, 'bizportal/products/' + editingId), { name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value) });
-      alert('Product Updated!'); cancelEdit();
+      set(ref(db, 'bizportal/products/' + editingId), productData)
+      .then(()=>{ alert('Product Updated!'); cancelEdit(); })
+      .catch(err=> alert('Error: ' + err.message));
     } else {
       let id = Date.now().toString();
-      set(ref(db, 'bizportal/products/' + id), { name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value) });
-      [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value=''); alert('Product Added!');
+      set(ref(db, 'bizportal/products/' + id), productData)
+      .then(()=>{ [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value=''); alert('Product Added!'); })
+      .catch(err=> alert('Error: ' + err.message));
     }
   }
 
