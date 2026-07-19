@@ -114,7 +114,7 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
         </div>
 
         <h3 style="margin-top:20px">📋 Manage Products</h3>
-        <input type="text" id="adminSearch" class="admin-search" placeholder="🔍 Search to find product to Edit/Delete..." onkeyup="buildProductList()">
+        <input type="text" id="adminSearch" class="admin-search" placeholder="🔍 Search to find product to Edit/Delete...">
         <div id="productList"></div>
       </div>
 
@@ -202,6 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelBtn = document.getElementById('cancelBtn');
   const formTitle = document.getElementById('formTitle');
 
+  // FIX: Add event listener here instead of inline
+  adminSearch.addEventListener('keyup', buildProductList);
+
   window.doLogin = async () => {
     loginError.innerText = 'Logging in...';
     try{ await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value); }
@@ -247,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     lowStockList.innerHTML = '';
     Object.entries(products).filter(([id,p])=>p.stock < 10).forEach(([id,p])=>{
-      lowStockList.innerHTML += `<div style="padding:8px;background:#ffe6e6;border-radius:8px;margin:5px 0"><b>${p.name}</b> - <span class="stock-low">Only ${p.stock} left!</span></div>`
+      lowStockList.innerHTML += `<div style="padding:8px;background:#ffe6e6;border-radius:8px;margin:5px 0"><b>${p.name}</b> - <span style="color:var(--danger);font-weight:700">Only ${p.stock} left!</span></div>`
     })
     if(lowStockList.innerHTML=='') lowStockList.innerHTML = '<p style="color:var(--green)">All stock levels good ✅</p>'
   }
@@ -281,9 +284,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if(currentUser.role == 'admin') return;
     productList.innerHTML = '';
     let searchTerm = adminSearch.value.toLowerCase();
-    Object.entries(products).filter(([id,p])=> p.name.toLowerCase().includes(searchTerm) ).forEach(([id,p])=>{
+
+    Object.entries(products).filter(([id,p])=>{
+      return p.name.toLowerCase().includes(searchTerm) || p.category.toLowerCase().includes(searchTerm)
+    }).forEach(([id,p])=>{
       productList.innerHTML += `<div style="padding:10px;border:1px solid var(--border);border-radius:8px;margin:5px 0;background:#fafafa">
-        <b>${p.name}</b> - R${p.price} - Stock: ${p.stock}
+        <b>${p.name}</b> - R${p.price} - Stock: ${p.stock} - <small>${p.category}</small>
         <div style="float:right;gap:5px;display:flex">
           <button onclick="editProduct('${id}')" class="btn-blue" style="padding:5px 10px;font-size:12px">Edit</button>
           ${currentUser.role== 'ceo'? `<button onclick="deleteProduct('${id}')" class="btn-danger" style="padding:5px 10px;font-size:12px">Del</button>` : ''}
