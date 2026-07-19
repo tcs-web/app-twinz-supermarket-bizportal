@@ -3,94 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#ff4747">
 <title>Twinz Supermarket Bizportal</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-:root{
-  --bg:#f5f5f5;--card:#fff;--accent:#ff4747;--accent2:#ff9500;--green:#00b894;--blue:#0984e3;--purple:#6c5ce7; /* FIXED #f5f5 to #f5f5f5 */
-  --text:#2d3436;--muted:#636e72;--border:#dfe6e9;--shadow:0 2px 8px rgba(0,0,0,0.1);
-}
+:root{--bg:#f5f5f5;--card:#fff;--accent:#ff4747;--green:#00b894;--blue:#0984e3;--purple:#6c5ce7;--text:#2d3436;--muted:#636e72;--border:#dfe6e9;--shadow:0 2px 8px rgba(0,0,0,0.1);}
 *{box-sizing:border-box;font-family:'Poppins',sans-serif}
 body{margin:0;background:var(--bg);color:var(--text)}
 .header{background:linear-gradient(90deg,#ff4747,#ff9500);padding:12px;color:#fff;position:sticky;top:0;z-index:99;box-shadow:var(--shadow)}
 .header-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .logo{width:45px;height:45px;border-radius:10px;background:#fff;padding:4px}
-.search-box{flex:1;background:#fff;border-radius:25px;padding:8px 15px;display:flex;align-items:center}
-.search-box input{border:none;outline:none;width:100%;background:transparent;color:#000}
-.nav-cats{display:flex;gap:15px;overflow-x:auto;margin-top:10px;padding-bottom:5px}
-.nav-cats button{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-weight:600;cursor:pointer;white-space:nowrap}
-.container{max-width:1200px;margin:0 auto;padding:15px}
-.banner{background:linear-gradient(135deg,#ff4747,#ff9500);color:#fff;padding:20px;border-radius:15px;text-align:center;margin:15px 0;font-weight:800;font-size:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-.card{background:var(--card);border-radius:12px;padding:10px;box-shadow:var(--shadow);position:relative}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:15px}
+.card{background:var(--card);border-radius:12px;padding:10px;box-shadow:var(--shadow)}
 .card img{width:100%;height:160px;object-fit:cover;border-radius:8px}
-.card h4{margin:8px 0;font-size:13px;height:36px;overflow:hidden}
-.price{color:var(--accent);font-weight:800;font-size:16px}
-.old-price{text-decoration:line-through;color:var(--muted);font-size:11px}
-.stock{font-size:10px;color:var(--green)}
-.btn-cart{background:var(--accent);color:#fff;border:none;width:100%;padding:8px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:5px}
-
-.admin{background:#fff;padding:15px;border-radius:12px;margin:15px 0;box-shadow:var(--shadow)}
+.admin{background:#fff;padding:15px;border-radius:12px;margin:15px;box-shadow:var(--shadow)}
 .login-box{max-width:400px;margin:40px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:var(--shadow)}
-.login-box h2{text-align:center;color:var(--accent)}
-.role-badge{padding:4px 10px;border-radius:15px;font-size:10px;font-weight:800;color:#fff}
-.role-ceo{background:var(--purple)}.role-manager{background:var(--blue)}.role-admin{background:var(--green)}
-.tabs{display:flex;gap:8px;border-bottom:2px solid var(--border);margin-bottom:15px;overflow-x:auto}
-.tab{padding:10px 15px;cursor:pointer;font-weight:600;white-space:nowrap}
-.tab.active{border-bottom:3px solid var(--accent);color:var(--accent)}
-input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border);border-radius:8px}
-.btn{background:var(--accent);color:#fff;border:none;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer}
-.btn-blue{background:var(--blue)}.btn-green{background:var(--green)}.btn-purple{background:var(--purple)}
-.cart-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px;box-shadow:0 -2px 10px rgba(0,0,0,0.2);display:none;z-index:98}
-.install-btn{position:fixed;bottom:80px;right:15px;background:var(--purple);color:#fff;padding:10px 15px;border-radius:25px;border:none;font-weight:700;z-index:100;display:none}
+.btn{background:var(--accent);color:#fff;border:none;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer;width:100%}
+.btn-purple{background:var(--purple)}
+input{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border);border-radius:8px}
 .debug{position:fixed;top:0;left:0;background:red;color:#fff;padding:5px;font-size:10px;z-index:9999}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div id="debug" class="debug">Loading...</div>
 
 <div id="loginScreen">
   <div class="login-box">
-    <img src="https://files.catbox.moe/0zympr.jpeg" style="width:80px;margin:0 auto;display:block;border-radius:15px">
     <h2>TWINZ BIZPORTAL</h2>
     <input type="email" id="loginEmail" placeholder="Email">
     <input type="password" id="loginPass" placeholder="Password">
-    <button class="btn" onclick="doLogin()" style="width:100%">Login</button>
-    <button class="btn btn-blue" onclick="registerUser()" style="width:100%;margin-top:8px">Create Account</button>
+    <button class="btn" onclick="doLogin()">Login</button>
+    <button class="btn btn-purple" onclick="registerUser()" style="margin-top:8px">Create Account</button>
   </div>
 </div>
 
 <div id="app" style="display:none">
-  <div class="header">
-    <div class="header-top">
-      <img src="https://files.catbox.moe/0zympr.jpeg" class="logo">
-      <div class="search-box"><input type="text" id="searchInput" placeholder="Search..." onkeyup="searchProducts()"></div>
-      <div><span class="role-badge" id="userRole">ADMIN</span><button class="btn" onclick="logout()">Logout</button></div>
-    </div>
+  <div class="header"><div class="header-top"><img src="https://files.catbox.moe/0zympr.jpeg" class="logo"><span id="userRole">ADMIN</span><button class="btn" style="width:auto" onclick="logout()">Logout</button></div></div>
+  <div class="admin">
+    <button class="btn-purple" onclick="addDemoProducts()">⚡ Add 5 Demo Products</button>
+    <input type="text" id="pName" placeholder="Product Name">
+    <input type="number" id="pPrice" placeholder="Price R">
+    <input type="number" id="pStock" placeholder="Stock Qty">
+    <button class="btn" onclick="saveProduct()">Save Product</button>
   </div>
-  <div class="container">
-    <div class="admin" id="adminPanel">
-      <div class="tabs">
-        <div class="tab active" onclick="showTab('products',this)">Products</div>
-        <div class="tab" onclick="showTab('stock',this)">Stock</div>
-      </div>
-      <div id="tab-products">
-        <button class="btn-purple" onclick="addDemoProducts()">⚡ Add 5 Demo Products</button>
-        <input type="text" id="pName" placeholder="Product Name">
-        <select id="pCat"><option>Food</option><option>Drinks</option></select>
-        <input type="text" id="pImg" placeholder="Catbox Image URL">
-        <input type="number" id="pPrice" placeholder="Price R">
-        <input type="number" id="pStock" placeholder="Stock Qty">
-        <button class="btn" onclick="saveProduct()">Save Product</button>
-        <div id="productList"></div>
-      </div>
-      <div id="tab-stock" style="display:none"><div id="stockList"></div></div>
-    </div>
-    <h2>🛒 Products</h2>
-    <div class="grid" id="productGrid"></div>
-  </div>
+  <h2 style="padding:0 15px">🛒 Products</h2>
+  <div class="grid" id="productGrid"></div>
 </div>
 
 <script type="module">
@@ -98,7 +54,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-const debug = (msg)=>{document.getElementById('debug').innerText = msg; console.log(msg)}
+const debug = (msg)=>{document.getElementById('debug').innerText = msg}
 
 const firebaseConfig = {
   apiKey: "AIzaSyCKxK7qBOGW4GzhsYxpezgXnNlRODkBA8A",
@@ -107,86 +63,60 @@ const firebaseConfig = {
   projectId: "app-twinz-supermarket-biz"
 };
 
-try{
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const auth = getAuth(app);
-  const productsRef = ref(db, 'bizportal/products');
-  let products = {};
-  let currentRole = 'admin';
-  debug("Firebase Connected");
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+const productsRef = ref(db, 'bizportal/products');
+let products = {};
 
-  window.doLogin = () => {
-    signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value)
-    .then(()=>debug("Login Success"))
-    .catch(e=>alert('Login failed: ' + e.message))
-  }
-  window.registerUser = () => {
-    createUserWithEmailAndPassword(auth, loginEmail.value, loginPass.value)
-    .then(cred=>{set(ref(db, 'bizportal/users/' + cred.user.uid), {email: cred.user.email, role: 'admin'}); alert('Account created')})
-    .catch(e=>alert('Register failed: ' + e.message))
-  }
-  window.logout = () => {signOut(auth)}
+window.doLogin = () => signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value).catch(e=>alert(e.message))
+window.registerUser = () => createUserWithEmailAndPassword(auth, loginEmail.value, loginPass.value).then(cred=>set(ref(db, 'bizportal/users/' + cred.user.uid), {email: cred.user.email, role: 'admin'}))
+window.logout = () => signOut(auth)
 
-  onAuthStateChanged(auth, user => {
-    if(user){
-      debug("User logged in: " + user.email);
-      loginScreen.style.display = 'none';
-      app.style.display = 'block';
-      onValue(ref(db, 'bizportal/users/' + user.uid + '/role'), snap=>{
-        currentRole = snap.val() || 'admin';
-        document.getElementById('userRole').innerText = currentRole.toUpperCase();
-      })
-    } else {
-      debug("No user");
-      loginScreen.style.display = 'block';
-      app.style.display = 'none';
-    }
-  })
-
-  window.showTab = (tab, el) => { // FIXED: pass 'this'
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    el.classList.add('active');
-    ['products','stock'].forEach(t=>{
-      document.getElementById('tab-'+t).style.display = t==tab?'block':'none'
+onAuthStateChanged(auth, user => {
+  if(user){
+    loginScreen.style.display = 'none';
+    app.style.display = 'block';
+    onValue(ref(db, 'bizportal/users/' + user.uid + '/role'), snap=>{
+      let role = snap.val() || 'admin';
+      document.getElementById('userRole').innerText = role.toUpperCase();
     })
-  }
-
-  onValue(productsRef, snap => {
-    products = snap.val() || {};
-    debug("Products loaded: " + Object.keys(products).length);
-    renderProducts();
-    buildProductList();
-    buildStockList();
-  })
-
-  function renderProducts(){
-    productGrid.innerHTML = '';
-    if(Object.keys(products).length === 0){
-      productGrid.innerHTML = `<p style="text-align:center">No products. Click "Add Demo Products"</p>`
-      return;
-    }
-    Object.entries(products).forEach(([id,p])=>{
-      productGrid.innerHTML += `<div class="card"><img src="${p.img}"><h4>${p.name}</h4><div class="price">R${p.price}</div><div class="stock">Stock: ${p.stock}</div></div>`;
+    // Load products for EVERYONE after login
+    onValue(productsRef, snap => {
+      products = snap.val() || {};
+      debug("Products loaded: " + Object.keys(products).length);
+      renderProducts();
     })
+  } else {
+    loginScreen.style.display = 'block';
+    app.style.display = 'none';
   }
-  function buildProductList(){ productList.innerHTML = Object.entries(products).map(([id,p])=>`<div>${p.name} - R${p.price}</div>`).join('') }
-  function buildStockList(){ stockList.innerHTML = Object.entries(products).map(([id,p])=>`<div>${p.name}: ${p.stock}</div>`).join('') }
+})
 
-  window.saveProduct = () => {
-    let id = Date.now().toString();
-    let data = {name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), stock:parseInt(pStock.value)};
-    set(ref(db, 'bizportal/products/' + id), data);
+function renderProducts(){
+  productGrid.innerHTML = '';
+  if(Object.keys(products).length === 0){
+    productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products. Login as CEO/Manager and click "Add Demo Products"</p>`
+    return;
   }
-  window.addDemoProducts = () => {
-    for(let i=1;i<=5;i++){
-      set(ref(db, 'bizportal/products/demo'+i), {name:"Demo Product "+i, category:"Food", price:10*i, stock:20, img:"https://files.catbox.moe/0zympr.jpeg"});
-    }
-    alert('5 Demo Added')
-  }
-  window.searchProducts = ()=>{};
+  Object.entries(products).forEach(([id,p])=>{
+    productGrid.innerHTML += `<div class="card"><img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}"><h4>${p.name}</h4><div style="color:var(--accent);font-weight:800">R${p.price}</div><div style="color:var(--green);font-size:10px">Stock: ${p.stock}</div></div>`;
+  })
+}
 
-}catch(e){debug("ERROR: " + e.message)}
+window.saveProduct = () => {
+  let id = Date.now().toString();
+  set(ref(db, 'bizportal/products/' + id), {
+    name:pName.value, price:parseInt(pPrice.value), stock:parseInt(pStock.value), img:"https://files.catbox.moe/0zympr.jpeg"
+  });
+  pName.value=''; pPrice.value=''; pStock.value='';
+}
+window.addDemoProducts = () => {
+  for(let i=1;i<=5;i++){
+    set(ref(db, 'bizportal/products/demo'+i), {name:"Demo Product "+i, price:10*i, stock:20, img:"https://files.catbox.moe/0zympr.jpeg"});
+  }
+  alert('5 Demo Added - Refresh page')
+}
 </script>
 </body>
 </html>
