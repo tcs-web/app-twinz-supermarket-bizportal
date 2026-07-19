@@ -20,6 +20,11 @@
 .search-box input{border:none;outline:none;width:100%;background:transparent;color:#000}
 .nav-cats{display:flex;gap:15px;overflow-x:auto;margin-top:10px;padding-bottom:5px}
 .nav-cats button{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-weight:600;cursor:pointer;white-space:nowrap}
+
+/* FIX: CLIENT CATEGORY BUTTONS BLACK ON WHITE */
+#clientView.nav-cats button{background:#fff;color:#2d3436;border:1px solid var(--border)}
+#clientView.nav-cats button:hover{background:var(--accent);color:#fff}
+
 .container{max-width:1200px;margin:0 auto;padding:15px}
 .banner{background:linear-gradient(135deg,#ff4747,#ff9500);color:#fff;padding:20px;border-radius:15px;text-align:center;margin:15px 0;font-weight:800;font-size:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
@@ -216,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').style.display = 'none';
     document.getElementById('clientView').style.display = 'block';
-    // FORCE SHOW BANNER AFTER 2 SECONDS FOR CLIENTS
     setTimeout(()=>{ if(!window.matchMedia('(display-mode: standalone)').matches){ document.getElementById('installBanner').style.display = 'block' } }, 2000)
   }
 
@@ -224,12 +228,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const appDiv = document.getElementById('app');
   const clientProductGrid = document.getElementById('clientProductGrid');
   const productGrid = document.getElementById('productGrid');
+  const productList = document.getElementById('productList');
+  const stockList = document.getElementById('stockList');
+  const ordersList = document.getElementById('ordersList');
+  const lowStockList = document.getElementById('lowStockList');
   const searchInput = document.getElementById('searchInput');
   const clientSearchInput = document.getElementById('clientSearchInput');
   const adminSearch = document.getElementById('adminSearch');
+  const cartBar = document.getElementById('cartBar');
   const clientCartBar = document.getElementById('clientCartBar');
+  const cartCount = document.getElementById('cartCount');
   const clientCartCount = document.getElementById('clientCartCount');
+  const cartTotal = document.getElementById('cartTotal');
   const clientCartTotal = document.getElementById('clientCartTotal');
+  const pName = document.getElementById('pName');
+  const pCat = document.getElementById('pCat');
+  const pImg = document.getElementById('pImg');
+  const pPrice = document.getElementById('pPrice');
+  const pOldPrice = document.getElementById('pOldPrice');
+  const pStock = document.getElementById('pStock');
+  const saveBtn = document.getElementById('saveBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const formTitle = document.getElementById('formTitle');
 
   if(adminSearch) adminSearch.addEventListener('keyup', buildProductList);
 
@@ -242,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Client Link Copied! Share this with customers');
   }
 
-  // PWA INSTALL ONLY FOR CLIENT MODE
   if(isClientMode){
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -261,7 +280,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  window.doLogin = async () => { /* same */ }
+  window.doLogin = async () => {
+    loginError.innerText = 'Logging in...';
+    try{ await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value); }
+    catch(e){ loginError.innerText = 'Login failed: ' + e.message }
+  }
   window.logout = () => { signOut(auth) }
 
   onAuthStateChanged(auth, async user => {
@@ -282,7 +305,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
 
-  window.showTab = (tab, el) => { /* same */ }
+  window.showTab = (tab, el) => {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    ['dashboard','products','stock','orders','users','reports'].forEach(t=>{
+      document.getElementById('tab-'+t).style.display = t==tab?'block':'none'
+    })
+  }
 
   onValue(productsRef, snap => {
     products = snap.val() || {};
@@ -292,9 +321,28 @@ document.addEventListener('DOMContentLoaded', () => {
   })
   onValue(ordersRef, snap => { orders = snap.val() || {}; buildOrders(); updateDashboard(); })
 
-  function updateDashboard(){ /* same */ }
+  function updateDashboard(){
+    document.getElementById('statProducts').innerText = Object.keys(products).length;
+    document.getElementById('statStock').innerText = Object.values(products).reduce((a,b)=>a+b.stock,0);
+    document.getElementById('statOrders').innerText = Object.values(orders).filter(o=>o.status=='Pending').length;
+    lowStockList.innerHTML = '';
+    Object.entries(products).filter(([id,p])=>p.stock < 10).forEach(([id,p])=>{
+      lowStockList.innerHTML += `<div style="padding:8px;background:#ffe6e6;border-radius:8px;margin:5px 0"><b>${p.name}</b> - <span style="color:var(--danger);font-weight:700">Only ${p.stock} left!</span></div>`
+    })
+    if(lowStockList.innerHTML=='') lowStockList.innerHTML = '<p style="color:var(--green)">All stock levels good ✅</p>'
+  }
 
-  function renderProducts(){ /* same */ }
+  function renderProducts(){
+    productGrid.innerHTML = '';
+    if(Object.keys(products).length === 0){ productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products yet</p>`; return; }
+    Object.entries(products).filter(([id,p])=>{
+      let matchCat = currentFilter == 'All' || p.category == currentFilter;
+      let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());
+      return matchCat && matchSearch;
+    }).forEach(([id,p])=>{
+      productGrid.innerHTML += `<div class="card"><img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><div class="stock ${p.stock<10?'stock-low':''}">Stock: ${p.stock}</div>${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}</div>`;
+    })
+  }
 
   function renderClientProducts(){
     if(!isClientMode) return;
@@ -305,22 +353,92 @@ document.addEventListener('DOMContentLoaded', () => {
       let matchSearch = p.name.toLowerCase().includes(clientSearchInput.value.toLowerCase());
       return matchCat && matchSearch && p.stock > 0;
     }).forEach(([id,p])=>{
-      clientProductGrid.innerHTML += `<div class="card"><img src="${p.img}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button></div>`;
+      clientProductGrid.innerHTML += `<div class="card"><img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button></div>`;
     })
   }
 
   window.searchProducts = () => { renderProducts(); renderClientProducts(); }
   window.filterCat = (cat) => { currentFilter=cat; renderProducts(); renderClientProducts(); }
 
-  function buildProductList(){ /* paste your full function here */ }
-  function buildOrders(){ /* paste your full function here */ }
-  window.editProduct = (id) => { /* paste */ }
-  window.cancelEdit = () => { /* paste */ }
-  window.saveProduct = () => { /* paste */ }
-  function buildStockList(){ /* paste */ }
-  window.seedDatabase = () => { /* paste */ }
-  window.deleteProduct = (id) => { /* paste */ }
-  window.updateStock = (id) => { /* paste */ }
+  function buildProductList(){
+    if(currentUser.role == 'admin') return;
+    productList.innerHTML = '';
+    let searchTerm = adminSearch.value.toLowerCase();
+    Object.entries(products).filter(([id,p])=>{
+      return p.name.toLowerCase().includes(searchTerm) || p.category.toLowerCase().includes(searchTerm)
+    }).forEach(([id,p])=>{
+      productList.innerHTML += `<div style="padding:10px;border:1px solid var(--border);border-radius:8px;margin:5px 0;background:#fafafa"><b>${p.name}</b> - R${p.price} - Stock: ${p.stock} - <small>${p.category}</small><div style="float:right;gap:5px;display:flex"><button onclick="editProduct('${id}')" class="btn-blue" style="padding:5px 10px;font-size:12px">Edit</button>${currentUser.role== 'ceo'? `<button onclick="deleteProduct('${id}')" class="btn-danger" style="padding:5px 10px;font-size:12px">Del</button>` : ''}</div></div>`;
+    })
+    if(productList.innerHTML === '') productList.innerHTML = '<p style="text-align:center;color:var(--muted)">No products found</p>'
+  }
+
+  function buildOrders(){
+    if(currentUser.role == 'admin') return;
+    ordersList.innerHTML = '';
+    if(Object.keys(orders).length === 0){ ordersList.innerHTML = '<p>No orders yet</p>'; return; }
+    Object.entries(orders).reverse().forEach(([id,o])=>{
+      ordersList.innerHTML += `<div class="order-card"><b>Order #${id.slice(-6)}</b> - R${o.total} - <span style="color:var(--accent)">${o.status}</span><br><small>${new Date(o.date).toLocaleString()}</small><br><small>${o.user}</small><br>${o.items.map(i=>`${i.name} x${i.qty}`).join(', ')}</div>`;
+    })
+  }
+
+  window.editProduct = (id) => {
+    if(currentUser.role == 'admin') return alert('No permission');
+    let p = products[id]; editingId = id;
+    pName.value = p.name; pCat.value = p.category; pImg.value = p.img; pPrice.value = p.price; pOldPrice.value = p.oldPrice; pStock.value = p.stock;
+    formTitle.innerText = "✏️ Editing: " + p.name; saveBtn.innerText = "Update Product"; saveBtn.style.background = "var(--blue)"; cancelBtn.style.display = "block";
+    document.getElementById('tab-products').scrollIntoView();
+  }
+
+  window.cancelEdit = () => {
+    editingId = null; [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
+    formTitle.innerText = "➕ Add Product"; saveBtn.innerText = "Save Product"; saveBtn.style.background = "var(--accent)"; cancelBtn.style.display = "none";
+  }
+
+  window.saveProduct = () => {
+    if(currentUser.role == 'admin') return alert('No permission');
+    if(editingId){
+      set(ref(db, 'bizportal/products/' + editingId), { name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value) });
+      alert('Product Updated!'); cancelEdit();
+    } else {
+      let id = Date.now().toString();
+      set(ref(db, 'bizportal/products/' + id), { name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value) });
+      [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value=''); alert('Product Added!');
+    }
+  }
+
+  function buildStockList(){
+    stockList.innerHTML = '';
+    Object.entries(products).forEach(([id,p])=>{
+      stockList.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0"><div><b>${p.name}</b><br><small class="${p.stock<10?'stock-low':''}">Stock: ${p.stock}</small></div><div><input type="number" id="stock_${id}" value="0" style="width:80px"><button class="btn-green" onclick="updateStock('${id}')">+ Add</button></div></div>`;
+    })
+  }
+
+  window.seedDatabase = () => {
+    if(currentUser.role!= 'ceo' && currentUser.role!= 'manager') return alert('No permission');
+    const defaultData = [
+      {name:"White Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Milk 1L Full Cream", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Coca Cola 2L", category:"Drinks", price:25, oldPrice:30, stock:100, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Orange Juice 1L", category:"Drinks", price:30, oldPrice:35, stock:40, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"White Rice 5kg", category:"Groceries", price:120, oldPrice:150, stock:30, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Sunflower Oil 750ml", category:"Groceries", price:45, oldPrice:50, stock:45, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Simba Chips 125g", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Chocolate Bar", category:"Snacks", price:12, oldPrice:15, stock:90, img:"https://files.catbox.moe/0zympr.jpeg"}
+    ];
+    defaultData.forEach(p=>{ let id = Date.now().toString() + Math.random(); set(ref(db, 'bizportal/products/' + id), p); });
+    alert('8 Default products added to Firebase!')
+  }
+
+  window.deleteProduct = (id) => {
+    if(currentUser.role!= 'ceo') return alert('CEO only');
+    if(confirm('Delete this product?')) remove(ref(db, 'bizportal/products/' + id))
+  }
+
+  window.updateStock = (id) => {
+    let add = parseInt(document.getElementById('stock_'+id).value);
+    set(ref(db, 'bizportal/products/' + id + '/stock'), products[id].stock + add);
+    document.getElementById('stock_'+id).value = 0;
+  }
 
   window.addToCart = (id) => {
     let p = products[id]; let item = cart.find(x=>x.id==id);
@@ -329,17 +447,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateCart(){
+    cartBar.style.display = cart.length?'block':'none';
     clientCartBar.style.display = cart.length?'block':'none';
     let count = cart.reduce((a,b)=>a+b.qty,0);
     let total = cart.reduce((a,b)=>a+b.qty*b.price,0);
-    clientCartCount.innerText = count;
-    clientCartTotal.innerText = total;
+    if(cartCount) cartCount.innerText = count;
+    if(clientCartCount) clientCartCount.innerText = count;
+    if(cartTotal) cartTotal.innerText = total;
+    if(clientCartTotal) clientCartTotal.innerText = total;
   }
 
   window.checkout = () => {
     if(cart.length === 0) return alert('Cart empty');
     const orderId = Date.now().toString();
-    const order = { user: 'Guest', items: cart, total: cart.reduce((a,b)=>a+b.qty*b.price,0), date: new Date().toISOString(), status: 'Pending' };
+    const order = { user: isClientMode? 'Guest' : currentUser.email, items: cart, total: cart.reduce((a,b)=>a+b.qty*b.price,0), date: new Date().toISOString(), status: 'Pending' };
     set(ref(db, 'bizportal/orders/' + orderId), order);
     cart.forEach(item => { set(ref(db, 'bizportal/products/' + item.id + '/stock'), products[item.id].stock - item.qty); });
     let msg = `Hello Twinz, my order:\n` + cart.map(i=>`${i.name} x${i.qty}`).join('\n') + `\nTotal: R${order.total}`;
@@ -347,8 +468,28 @@ document.addEventListener('DOMContentLoaded', () => {
     cart = []; updateCart(); alert('Order placed!')
   }
 
-  window.downloadReport = () => { /* paste */ }
-  window.downloadOrdersCSV = () => { /* paste */ }
+  window.downloadReport = () => {
+    const doc = new jsPDF();
+    doc.text("Twinz Bizportal Report", 10, 10);
+    doc.text(`Total Products: ${Object.keys(products).length}`, 10, 20);
+    doc.text(`Total Stock: ${Object.values(products).reduce((a,b)=>a+b.stock,0)}`, 10, 30);
+    doc.text(`Pending Orders: ${Object.values(orders).filter(o=>o.status=='Pending').length}`, 10, 40);
+    doc.save("Twinz-Report.pdf");
+  }
+
+  window.downloadOrdersCSV = () => {
+    let csv = 'OrderID,Date,Customer,Total,Status,Items\n';
+    Object.entries(orders).forEach(([id,o])=>{
+      csv += `${id},${o.date},${o.user},${o.total},${o.status},"${o.items.map(i=>i.name+' x'+i.qty).join('; ')}"\n`
+    })
+    let blob = new Blob([csv], {type: 'text/csv'});
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = 'Twinz-Orders.csv';
+    a.click();
+  }
+
 });
 </script>
 </body>
