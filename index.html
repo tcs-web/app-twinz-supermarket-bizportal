@@ -6,15 +6,10 @@
 <title>Twinz Supermarket Bizportal</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-:root{
-  --bg:#f5f5f5;--card:#fff;--accent:#ff4747;--accent2:#ff9500;--green:#00b894;--blue:#0984e3;--purple:#6c5ce7;
-  --text:#2d3436;--muted:#636e72;--border:#dfe6e9;--shadow:0 2px 8px rgba(0,0,0,0.1);
-}
-*{box-sizing:border-box;font-family:'Poppins',sans-serif}
-body{margin:0;background:var(--bg);color:var(--text)}
+:root{--bg:#f5f5f5;--card:#fff;--accent:#ff4747;--accent2:#ff9500;--green:#00b894;--blue:#0984e3;--purple:#6c5ce7;--text:#2d3436;--muted:#636e72;--border:#dfe6e9;--shadow:0 2px 8px rgba(0,0,0,0.1);}
+*{box-sizing:border-box;font-family:'Poppins',sans-serif}body{margin:0;background:var(--bg);color:var(--text)}
 .header{background:linear-gradient(90deg,#ff4747,#ff9500);padding:12px;color:#fff;position:sticky;top:0;z-index:99;box-shadow:var(--shadow)}
-.header-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.logo{width:45px;height:45px;border-radius:10px;background:#fff;padding:4px}
+.header-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.logo{width:45px;height:45px;border-radius:10px;background:#fff;padding:4px}
 .search-box{flex:1;background:#fff;border-radius:25px;padding:8px 15px;display:flex;align-items:center}
 .search-box input{border:none;outline:none;width:100%;background:transparent;color:#000}
 .nav-cats{display:flex;gap:15px;overflow-x:auto;margin-top:10px;padding-bottom:5px}
@@ -29,7 +24,6 @@ body{margin:0;background:var(--bg);color:var(--text)}
 .old-price{text-decoration:line-through;color:var(--muted);font-size:11px}
 .stock{font-size:10px;color:var(--green)}
 .btn-cart{background:var(--accent);color:#fff;border:none;width:100%;padding:8px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:5px}
-
 .admin{background:#fff;padding:15px;border-radius:12px;margin:15px 0;box-shadow:var(--shadow)}
 .login-box{max-width:400px;margin:40px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:var(--shadow)}
 .login-box h2{text-align:center;color:var(--accent)}
@@ -47,234 +41,96 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
 </head>
 <body>
 
-<div id="loginScreen">
-  <div class="login-box">
-    <img src="https://files.catbox.moe/0zympr.jpeg" style="width:80px;margin:0 auto;display:block;border-radius:15px">
-    <h2>TWINZ BIZPORTAL</h2>
-    <p style="text-align:center;color:var(--muted);font-size:12px">CEO / Manager / Admin Login</p>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPass" placeholder="Password">
-    <button class="btn" onclick="doLogin()" style="width:100%">Login</button>
-  </div>
-</div>
+<div id="loginScreen"><div class="login-box"><img src="https://files.catbox.moe/0zympr.jpeg" style="width:80px;margin:0 auto;display:block;border-radius:15px"><h2>TWINZ BIZPORTAL</h2><input type="email" id="loginEmail" placeholder="Email"><input type="password" id="loginPass" placeholder="Password"><button class="btn" onclick="doLogin()" style="width:100%">Login</button></div></div>
 
 <div id="app" style="display:none">
-  <div class="header">
-    <div class="header-top">
-      <img src="https://files.catbox.moe/0zympr.jpeg" class="logo">
-      <div class="search-box"><input type="text" id="searchInput" placeholder="Search in Twinz Supermarket..." onkeyup="searchProducts()"></div>
-      <div><span class="role-badge" id="userRole">ADMIN</span><button class="btn" style="padding:5px 10px;font-size:12px" onclick="logout()">Logout</button></div>
+  <div class="header"><div class="header-top"><img src="https://files.catbox.moe/0zympr.jpeg" class="logo"><div class="search-box"><input type="text" id="searchInput" placeholder="Search..." onkeyup="searchProducts()"></div><div><span class="role-badge" id="userRole">ADMIN</span><button class="btn" style="padding:5px 10px;font-size:12px" onclick="logout()">Logout</button></div></div>
+  <div class="nav-cats"><button onclick="filterCat('All')">All</button><button onclick="filterCat('Food')">Food</button><button onclick="filterCat('Drinks')">Drinks</button><button onclick="filterCat('Groceries')">Groceries</button><button onclick="filterCat('Snacks')">Snacks</button></div></div>
+  <div class="container"><div class="banner">🔥 WEEKEND SPECIAL - UP TO 30% OFF 🔥</div>
+    <div class="admin" id="adminPanel"><div class="tabs">
+      <div class="tab active" onclick="showTab('products', this)">Products</div>
+      <div class="tab" onclick="showTab('stock', this)">Stock Control</div>
+      <div class="tab" onclick="showTab('users', this)">Users</div>
+      <div class="tab" onclick="showTab('reports', this)">Reports</div>
     </div>
-    <div class="nav-cats">
-      <button onclick="filterCat('All')">All</button>
-      <button onclick="filterCat('Food')">Food</button>
-      <button onclick="filterCat('Drinks')">Drinks</button>
-      <button onclick="filterCat('Groceries')">Groceries</button>
-      <button onclick="filterCat('Snacks')">Snacks</button>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="banner">🔥 WEEKEND SPECIAL - UP TO 30% OFF 🔥</div>
-
-    <div class="admin" id="adminPanel">
-      <div class="tabs">
-        <div class="tab active" onclick="showTab('products')">Products</div>
-        <div class="tab" onclick="showTab('stock')">Stock Control</div>
-        <div class="tab" onclick="showTab('users')">Users</div>
-        <div class="tab" onclick="showTab('reports')">Reports</div>
-      </div>
-
-      <div id="tab-products">
-        <h3>➕ Add Product</h3>
-        <input type="text" id="pName" placeholder="Product Name">
-        <select id="pCat"><option>Food</option><option>Drinks</option><option>Groceries</option><option>Snacks</option></select>
-        <input type="text" id="pImg" placeholder="Catbox Image URL">
-        <input type="number" id="pPrice" placeholder="Price R">
-        <input type="number" id="pOldPrice" placeholder="Old Price R">
-        <input type="number" id="pStock" placeholder="Stock Qty">
-        <button class="btn" onclick="saveProduct()">Save Product</button>
-        <div id="productList" style="margin-top:15px"></div>
-      </div>
-
+      <div id="tab-products"><h3>➕ Add Product</h3><input type="text" id="pName" placeholder="Product Name"><select id="pCat"><option>Food</option><option>Drinks</option><option>Groceries</option><option>Snacks</option></select><input type="text" id="pImg" placeholder="Catbox Image URL"><input type="number" id="pPrice" placeholder="Price R"><input type="number" id="pOldPrice" placeholder="Old Price R"><input type="number" id="pStock" placeholder="Stock Qty"><button class="btn" onclick="saveProduct()">Save Product</button><div id="productList" style="margin-top:15px"></div></div>
       <div id="tab-stock" style="display:none"><h3>📦 Stock Management</h3><div id="stockList"></div></div>
-      <div id="tab-users" style="display:none"><h3>👥 Users & Roles</h3><p><b>CEO:</b> Full access + Delete products</p><p><b>Manager:</b> Add/Edit products</p><p><b>Admin:</b> Update stock only</p></div>
+      <div id="tab-users" style="display:none"><h3>👥 Users & Roles</h3><p><b>CEO:</b> Full access</p><p><b>Manager:</b> Add/Edit</p><p><b>Admin:</b> Update stock only</p></div>
       <div id="tab-reports" style="display:none"><h3>📊 Reports</h3><button class="btn-purple" onclick="downloadReport()">Download PDF Report</button></div>
     </div>
-
-    <h2 style="margin:20px 0">🛒 Trending Products</h2>
-    <div class="grid" id="productGrid"></div>
+    <h2 style="margin:20px 0">🛒 Trending Products</h2><div class="grid" id="productGrid"></div>
   </div>
-
   <div class="cart-bar" id="cartBar"><b>Cart: <span id="cartCount">0</span> items | R<span id="cartTotal">0</span></b><button class="btn" onclick="checkout()">Order via WhatsApp</button></div>
 </div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, set, onValue, remove, get, child } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getDatabase, ref, set, onValue, remove, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
 const { jsPDF } = window.jspdf;
 
-// 🔥 CONNECTED TO YOUR FIREBASE CLIENT
-const firebaseConfig = {
-  apiKey: "AIzaSyCKxK7qBOGW4GzhsYxpezgXnNlRODkBA8A",
-  authDomain: "app-twinz-supermarket-biz.firebaseapp.com",
-  databaseURL: "https://app-twinz-supermarket-biz-default-rtdb.firebaseio.com",
-  projectId: "app-twinz-supermarket-biz"
-};
+const firebaseConfig = {apiKey: "AIzaSyCKxK7qBOGW4GzhsYxpezgXnNlRODkBA8A",authDomain: "app-twinz-supermarket-biz.firebaseapp.com",databaseURL: "https://app-twinz-supermarket-biz-default-rtdb.firebaseio.com",projectId: "app-twinz-supermarket-biz"};
+const app = initializeApp(firebaseConfig);const db = getDatabase(app);const auth = getAuth(app);const productsRef = ref(db, 'bizportal/products');
+let products = {};let cart = [];let currentUser = {role:'admin'};let currentFilter = 'All';let seeded = false;
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
-const productsRef = ref(db, 'bizportal/products');
-
-let products = {};
-let cart = [];
-let currentUser = {role:'admin'};
-let currentFilter = 'All';
-let seeded = false;
-
-window.doLogin = () => {
-  signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value).catch(e=>alert('Login failed: ' + e.message))
-}
-
+window.doLogin = () => {signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value).catch(e=>alert('Login failed: ' + e.message))}
 window.logout = () => {signOut(auth)}
 
 onAuthStateChanged(auth, async user => {
   if(user){
-    onValue(ref(db, 'bizportal/users/' + user.uid + '/role'), async snap=>{
+    const roleRef = ref(db, 'bizportal/users/' + user.uid + '/role');
+    const roleSnap = await get(roleRef);
+    if(!roleSnap.exists()){ await set(roleRef, 'admin'); } // FIX 1: Auto create role
+    
+    onValue(roleRef, snap=>{
       currentUser = {email: user.email, role: snap.val() || 'admin'};
-      loginScreen.style.display = 'none';
-      app.style.display = 'block';
+      loginScreen.style.display = 'none';app.style.display = 'block';
       document.getElementById('userRole').innerText = currentUser.role.toUpperCase();
       document.getElementById('userRole').className = 'role-badge role-' + currentUser.role;
-      if(currentUser.role == 'admin'){document.getElementById('tab-users').style.display='none'}
+      document.getElementById('tab-users').style.display = currentUser.role == 'admin'? 'none' : 'block';
       
-      // AUTO SEED IF EMPTY AND USER IS CEO
       if(currentUser.role == 'ceo' && !seeded){
-        const snap = await get(productsRef);
-        if(!snap.exists()){
-          seedDatabase();
-        }
-        seeded = true;
+        get(productsRef).then(snap=>{if(!snap.exists()){seedDatabase();}});seeded = true;
       }
     })
-  } else {
-    loginScreen.style.display = 'block';
-    app.style.display = 'none';
-  }
+  } else {loginScreen.style.display = 'block';app.style.display = 'none';}
 })
 
-window.showTab = (tab) => {
+window.showTab = (tab, el) => { // FIX 3: use el
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  event.target.classList.add('active');
-  ['products','stock','users','reports'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display = t==tab?'block':'none'
-  })
+  el.classList.add('active');
+  ['products','stock','users','reports'].forEach(t=>{document.getElementById('tab-'+t).style.display = t==tab?'block':'none'})
 }
 
-onValue(productsRef, snap => {
-  products = snap.val() || {};
-  renderProducts();
-  buildProductList();
-  buildStockList();
-})
+onValue(productsRef, snap => {products = snap.val() || {};renderProducts();buildProductList();buildStockList()})
 
 function renderProducts(){
   productGrid.innerHTML = '';
-  if(Object.keys(products).length === 0){
-    productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">Loading products from Firebase...</p>`
-    return;
-  }
-  Object.entries(products).filter(([id,p])=>{
-    let matchCat = currentFilter == 'All' || p.category == currentFilter;
-    let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());
-    return matchCat && matchSearch;
-  }).forEach(([id,p])=>{
+  if(Object.keys(products).length === 0){productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products yet. CEO login to auto-seed.</p>`;return;}
+  Object.entries(products).filter(([id,p])=>{let matchCat = currentFilter == 'All' || p.category == currentFilter;let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());return matchCat && matchSearch;}).forEach(([id,p])=>{
     productGrid.innerHTML += `<div class="card"><img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><div class="stock">In Stock: ${p.stock}</div>${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}</div>`;
   })
 }
 
-window.searchProducts = () => renderProducts();
-window.filterCat = (cat) => {currentFilter=cat; renderProducts();}
+window.searchProducts = () => renderProducts();window.filterCat = (cat) => {currentFilter=cat; renderProducts();}
 
-function buildProductList(){
-  if(currentUser.role == 'admin') return;
-  productList.innerHTML = '';
-  Object.entries(products).forEach(([id,p])=>{
-    productList.innerHTML += `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0"><b>${p.name}</b> - R${p.price} - Stock: ${p.stock} ${currentUser.role!= 'admin'? `<button onclick="deleteProduct('${id}')" style="float:right" class="btn">Del</button>` : ''}</div>`;
-  })
+function buildProductList(){if(currentUser.role == 'admin') return;productList.innerHTML = '';Object.entries(products).forEach(([id,p])=>{productList.innerHTML += `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0"><b>${p.name}</b> - R${p.price} - Stock: ${p.stock} ${currentUser.role!= 'admin'? `<button onclick="deleteProduct('${id}')" style="float:right" class="btn">Del</button>` : ''}</div>`;})}
+function buildStockList(){stockList.innerHTML = '';Object.entries(products).forEach(([id,p])=>{stockList.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0"><div><b>${p.name}</b><br><small>Stock: ${p.stock}</small></div><div><input type="number" id="stock_${id}" value="0" style="width:80px"><button class="btn-green" onclick="updateStock('${id}')">+ Add</button></div></div>`;})}
+
+window.saveProduct = () => {if(currentUser.role == 'admin') return alert('No permission');let id = Date.now().toString();set(ref(db, 'bizportal/products/' + id), {name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value)});[pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');}
+
+function seedDatabase() { // FIX 2: Promise.all
+  const defaultData = [{name:"White Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},{name:"Milk 1L Full Cream", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"},{name:"Coca Cola 2L", category:"Drinks", price:25, oldPrice:30, stock:100, img:"https://files.catbox.moe/0zympr.jpeg"},{name:"Orange Juice 1L", category:"Drinks", price:30, oldPrice:35, stock:40, img:"https://files.catbox.moe/0zympr.jpeg"},{name:"White Rice 5kg", category:"Groceries", price:120, oldPrice:150, stock:30, img:"https://files.catbox.moe/0zympr.jpeg"},{name:"Sunflower Oil 750ml", category:"Groceries", price:45, oldPrice:50, stock:45, img:"https://files.catbox.moe/0zympr.jpeg"},{name:"Simba Chips 125g", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},{name:"Chocolate Bar", category:"Snacks", price:12, oldPrice:15, stock:90, img:"https://files.catbox.moe/0zympr.jpeg"}];
+  const promises = defaultData.map(p=>{let id = Date.now().toString() + Math.random();return set(ref(db, 'bizportal/products/' + id), p);});
+  Promise.all(promises).then(()=>alert('Default products added to Firebase!'))
 }
 
-function buildStockList(){
-  stockList.innerHTML = '';
-  Object.entries(products).forEach(([id,p])=>{
-    stockList.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0"><div><b>${p.name}</b><br><small>Stock: ${p.stock}</small></div><div><input type="number" id="stock_${id}" value="0" style="width:80px"><button class="btn-green" onclick="updateStock('${id}')">+ Add</button></div></div>`;
-  })
-}
-
-window.saveProduct = () => {
-  if(currentUser.role == 'admin') return alert('No permission');
-  let id = Date.now().toString();
-  set(ref(db, 'bizportal/products/' + id), {name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value)});
-  [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
-}
-
-// AUTO SEED DEFAULT CATEGORIES + PRODUCTS TO FIREBASE
-function seedDatabase() {
-  const defaultData = [
-    {name:"White Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Milk 1L Full Cream", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Coca Cola 2L", category:"Drinks", price:25, oldPrice:30, stock:100, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Orange Juice 1L", category:"Drinks", price:30, oldPrice:35, stock:40, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"White Rice 5kg", category:"Groceries", price:120, oldPrice:150, stock:30, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Sunflower Oil 750ml", category:"Groceries", price:45, oldPrice:50, stock:45, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Simba Chips 125g", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Chocolate Bar", category:"Snacks", price:12, oldPrice:15, stock:90, img:"https://files.catbox.moe/0zympr.jpeg"}
-  ];
-  defaultData.forEach(p=>{
-    let id = Date.now().toString() + Math.random();
-    set(ref(db, 'bizportal/products/' + id), p);
-  });
-  alert('Default categories and products added to Firebase!')
-}
-
-window.deleteProduct = (id) => {
-  if(currentUser.role!= 'ceo') return alert('CEO only');
-  if(confirm('Delete?')) remove(ref(db, 'bizportal/products/' + id))
-}
-
-window.updateStock = (id) => {
-  let add = parseInt(document.getElementById('stock_'+id).value);
-  set(ref(db, 'bizportal/products/' + id + '/stock'), products[id].stock + add);
-}
-
-window.addToCart = (id) => {
-  let p = products[id];
-  let item = cart.find(x=>x.id==id);
-  if(item){item.qty++} else {cart.push({id,name:p.name,price:p.price,qty:1})}
-  updateCart();
-  set(ref(db, 'bizportal/products/' + id + '/stock'), p.stock - 1);
-}
-
-function updateCart(){
-  cartBar.style.display = cart.length?'block':'none';
-  cartCount.innerText = cart.reduce((a,b)=>a+b.qty,0);
-  cartTotal.innerText = cart.reduce((a,b)=>a+b.qty*b.price,0);
-}
-
-window.checkout = () => {
-  let msg = `Hello Twinz, my order:\n` + cart.map(i=>`${i.name} x${i.qty}`).join('\n');
-  window.open(`https://wa.me/27682547352?text=${encodeURIComponent(msg)}`)
-}
-
-window.downloadReport = () => {
-  const doc = new jsPDF();
-  doc.text("Twinz Bizportal Report", 10, 10);
-  doc.text(`Total Products: ${Object.keys(products).length}`, 10, 20);
-  doc.save("report.pdf");
-}
+window.deleteProduct = (id) => {if(currentUser.role!= 'ceo') return alert('CEO only');if(confirm('Delete?')) remove(ref(db, 'bizportal/products/' + id))}
+window.updateStock = (id) => {let add = parseInt(document.getElementById('stock_'+id).value);set(ref(db, 'bizportal/products/' + id + '/stock'), products[id].stock + add);}
+window.addToCart = (id) => {let p = products[id];let item = cart.find(x=>x.id==id);if(item){item.qty++} else {cart.push({id,name:p.name,price:p.price,qty:1})};updateCart();} // FIX 4: Don't reduce stock here
+function updateCart(){cartBar.style.display = cart.length?'block':'none';cartCount.innerText = cart.reduce((a,b)=>a+b.qty,0);cartTotal.innerText = cart.reduce((a,b)=>a+b.qty*b.price,0);}
+window.checkout = () => {let msg = `Hello Twinz, my order:\n` + cart.map(i=>`${i.name} x${i.qty}`).join('\n');window.open(`https://wa.me/27682547352?text=${encodeURIComponent(msg)}`)}
+window.downloadReport = () => {const doc = new jsPDF();doc.text("Twinz Bizportal Report", 10, 10);doc.text(`Total Products: ${Object.keys(products).length}`, 10, 20);doc.save("report.pdf");}
 </script>
 </body>
 </html>
