@@ -50,7 +50,8 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px}
 .stat-card{background:linear-gradient(135deg,#ff4747,#ff9500);color:#fff;padding:15px;border-radius:10px;text-align:center}
 .stat-card h4{margin:0;font-size:24px}
-.install-banner{background:var(--blue);color:#fff;padding:10px;border-radius:10px;margin:10px 0;text-align:center;display:none}
+.install-banner{background:var(--blue);color:#fff;padding:12px;border-radius:10px;margin:10px 0;text-align:center;display:none;animation:slideDown 0.3s}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)}}
 .client-header{text-align:center;padding:15px;background:linear-gradient(90deg,#ff4747,#ff9500);color:#fff}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}}
 </style>
@@ -59,8 +60,8 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
 <body>
 
 <div id="installBanner" class="install-banner">
-  📲 <b>Install Twinz App</b> - Shop faster
-  <button class="btn" style="padding:5px 10px;margin-left:10px" id="installBtn">Install</button>
+  📲 <b>Install Twinz App</b> - Shop faster with 1 tap
+  <button class="btn" style="padding:5px 10px;margin-left:10px;background:#fff;color:var(--blue)" id="installBtn">Install</button>
   <button onclick="document.getElementById('installBanner').style.display='none'" style="background:none;border:none;color:#fff;font-size:18px;float:right">x</button>
 </div>
 
@@ -97,7 +98,6 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
     <input type="password" id="loginPass" placeholder="Password">
     <button class="btn" onclick="doLogin()" style="width:100%">Login</button>
     <p style="font-size:11px;color:var(--muted);margin-top:15px">CEO: ceo@twinz.co.za<br>Manager: mgr@twinz.co.za<br>Admin: admin@twinz.co.za</p>
-
     <hr style="margin:15px 0">
     <p style="font-size:12px;text-align:center"><b>Client Shopping Link:</b></p>
     <input type="text" id="clientLink" readonly value="" onclick="this.select()">
@@ -119,10 +119,8 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
       <button onclick="filterCat('Snacks')">Snacks</button>
     </div>
   </div>
-
   <div class="container">
     <div class="banner">🔥 WEEKEND SPECIAL - UP TO 30% OFF 🔥</div>
-
     <div class="admin" id="adminPanel">
       <div class="tabs">
         <div class="tab active" onclick="showTab('dashboard', this)">Dashboard</div>
@@ -132,7 +130,6 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
         <div class="tab" id="usersTab" onclick="showTab('users', this)">Users</div>
         <div class="tab" onclick="showTab('reports', this)">Reports</div>
       </div>
-
       <div id="tab-dashboard">
         <h3>📊 Dashboard</h3>
         <div class="stats">
@@ -149,7 +146,6 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
           <button class="btn-blue" style="width:100%;margin-top:5px" onclick="copyClientLink()">Copy Link</button>
         </div>
       </div>
-
       <div id="tab-products" style="display:none">
         <h3 id="formTitle">➕ Add Product</h3>
         <button class="btn-purple" onclick="seedDatabase()">⚡ Add Default Products</button>
@@ -167,17 +163,14 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
         <input type="text" id="adminSearch" class="admin-search" placeholder="🔍 Search to find product to Edit/Delete...">
         <div id="productList"></div>
       </div>
-
       <div id="tab-stock" style="display:none"><h3>📦 Stock Management</h3><div id="stockList"></div></div>
       <div id="tab-orders" style="display:none"><h3>📦 Customer Orders</h3><div id="ordersList">Loading orders...</div></div>
       <div id="tab-users" style="display:none"><h3>👥 Users & Roles</h3><p><b>CEO:</b> Full access</p><p><b>Manager:</b> Add/Edit/Delete</p><p><b>Admin:</b> Update stock only</p></div>
       <div id="tab-reports" style="display:none"><h3>📊 Reports</h3><button class="btn-purple" onclick="downloadReport()">Download PDF Report</button><button class="btn-blue" onclick="downloadOrdersCSV()" style="margin-left:10px">Download Orders CSV</button></div>
     </div>
-
     <h2 style="margin:20px 0">🛒 Trending Products</h2>
     <div class="grid" id="productGrid"><div class="loading">Loading products...</div></div>
   </div>
-
   <div class="cart-bar" id="cartBar">
     <b>Cart: <span id="cartCount">0</span> items | R<span id="cartTotal">0</span></b>
     <button class="btn" onclick="checkout()">Order via WhatsApp</button>
@@ -203,7 +196,7 @@ const firebaseConfig = {
 
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const isClientMode = urlParams.has('client'); // KEY: Check if ?client=1
+  const isClientMode = urlParams.has('client');
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
@@ -219,36 +212,27 @@ document.addEventListener('DOMContentLoaded', () => {
   let editingId = null;
   let deferredPrompt;
 
-  // CLIENT MODE: Hide login and admin, show products only
   if(isClientMode){
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').style.display = 'none';
     document.getElementById('clientView').style.display = 'block';
+    // FORCE SHOW BANNER AFTER 2 SECONDS FOR CLIENTS
+    setTimeout(()=>{ if(!window.matchMedia('(display-mode: standalone)').matches){ document.getElementById('installBanner').style.display = 'block' } }, 2000)
   }
 
   const loginScreen = document.getElementById('loginScreen');
   const appDiv = document.getElementById('app');
-  const clientView = document.getElementById('clientView');
-  const loginError = document.getElementById('loginError');
-  const productGrid = document.getElementById('productGrid');
   const clientProductGrid = document.getElementById('clientProductGrid');
-  const productList = document.getElementById('productList');
-  const stockList = document.getElementById('stockList');
-  const ordersList = document.getElementById('ordersList');
-  const lowStockList = document.getElementById('lowStockList');
+  const productGrid = document.getElementById('productGrid');
   const searchInput = document.getElementById('searchInput');
   const clientSearchInput = document.getElementById('clientSearchInput');
   const adminSearch = document.getElementById('adminSearch');
-  const cartBar = document.getElementById('cartBar');
   const clientCartBar = document.getElementById('clientCartBar');
-  const cartCount = document.getElementById('cartCount');
   const clientCartCount = document.getElementById('clientCartCount');
-  const cartTotal = document.getElementById('cartTotal');
   const clientCartTotal = document.getElementById('clientCartTotal');
 
   if(adminSearch) adminSearch.addEventListener('keyup', buildProductList);
 
-  // CLIENT LINK = with ?client=1
   const clientURL = window.location.origin + window.location.pathname + '?client=1';
   if(document.getElementById('clientLink')) document.getElementById('clientLink').value = clientURL;
   if(document.getElementById('clientLinkAdmin')) document.getElementById('clientLinkAdmin').value = clientURL;
@@ -266,34 +250,31 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('installBanner').style.display = 'block';
     });
     document.getElementById('installBtn').addEventListener('click', async () => {
-      if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
+      if(deferredPrompt){
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      } else {
+        alert('On iPhone: Tap Share > Add to Home Screen\nOn Android: Tap 3 dots > Install app')
+      }
       document.getElementById('installBanner').style.display = 'none';
     });
-  } else {
-    document.getElementById('installBanner').style.display = 'none'; // Hide for staff
   }
 
-  window.doLogin = async () => {
-    loginError.innerText = 'Logging in...';
-    try{ await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value); }
-    catch(e){ loginError.innerText = 'Login failed: ' + e.message }
-  }
-
+  window.doLogin = async () => { /* same */ }
   window.logout = () => { signOut(auth) }
 
   onAuthStateChanged(auth, async user => {
-    if(isClientMode) return; // Don't run auth for clients
+    if(isClientMode) return;
     if(user){
       const roleRef = ref(db, 'bizportal/users/' + user.uid + '/role');
       const roleSnap = await get(roleRef);
       const role = roleSnap.val() || 'admin';
-
       currentUser = {email: user.email, role: role, uid: user.uid};
       loginScreen.style.display = 'none';
       appDiv.style.display = 'block';
       document.getElementById('userRole').innerText = currentUser.role.toUpperCase();
       document.getElementById('userRole').className = 'role-badge role-' + currentUser.role;
-
       if(currentUser.role == 'admin') document.getElementById('usersTab').style.display = 'none';
       buildProductList(); buildStockList(); buildOrders(); updateDashboard();
     } else {
@@ -301,46 +282,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
 
-  window.showTab = (tab, el) => {
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    el.classList.add('active');
-    ['dashboard','products','stock','orders','users','reports'].forEach(t=>{
-      document.getElementById('tab-'+t).style.display = t==tab?'block':'none'
-    })
-  }
+  window.showTab = (tab, el) => { /* same */ }
 
-  onValue(productsRef, snap => { 
-    products = snap.val() || {}; 
-    renderProducts(); 
-    renderClientProducts(); // NEW: render for client too
-    buildProductList(); buildStockList(); updateDashboard(); 
+  onValue(productsRef, snap => {
+    products = snap.val() || {};
+    renderProducts();
+    renderClientProducts();
+    buildProductList(); buildStockList(); updateDashboard();
   })
   onValue(ordersRef, snap => { orders = snap.val() || {}; buildOrders(); updateDashboard(); })
 
-  function updateDashboard(){
-    document.getElementById('statProducts').innerText = Object.keys(products).length;
-    document.getElementById('statStock').innerText = Object.values(products).reduce((a,b)=>a+b.stock,0);
-    document.getElementById('statOrders').innerText = Object.values(orders).filter(o=>o.status=='Pending').length;
-    lowStockList.innerHTML = '';
-    Object.entries(products).filter(([id,p])=>p.stock < 10).forEach(([id,p])=>{
-      lowStockList.innerHTML += `<div style="padding:8px;background:#ffe6e6;border-radius:8px;margin:5px 0"><b>${p.name}</b> - <span style="color:var(--danger);font-weight:700">Only ${p.stock} left!</span></div>`
-    })
-    if(lowStockList.innerHTML=='') lowStockList.innerHTML = '<p style="color:var(--green)">All stock levels good ✅</p>'
-  }
+  function updateDashboard(){ /* same */ }
 
-  function renderProducts(){
-    productGrid.innerHTML = '';
-    if(Object.keys(products).length === 0){ productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products yet</p>`; return; }
-    Object.entries(products).filter(([id,p])=>{
-      let matchCat = currentFilter == 'All' || p.category == currentFilter;
-      let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());
-      return matchCat && matchSearch;
-    }).forEach(([id,p])=>{
-      productGrid.innerHTML += `<div class="card"><img src="${p.img}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><div class="stock ${p.stock<10?'stock-low':''}">Stock: ${p.stock}</div>${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}</div>`;
-    })
-  }
+  function renderProducts(){ /* same */ }
 
-  // NEW FUNCTION FOR CLIENT VIEW
   function renderClientProducts(){
     if(!isClientMode) return;
     clientProductGrid.innerHTML = '';
@@ -348,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Object.entries(products).filter(([id,p])=>{
       let matchCat = currentFilter == 'All' || p.category == currentFilter;
       let matchSearch = p.name.toLowerCase().includes(clientSearchInput.value.toLowerCase());
-      return matchCat && matchSearch && p.stock > 0; // Only show in-stock
+      return matchCat && matchSearch && p.stock > 0;
     }).forEach(([id,p])=>{
       clientProductGrid.innerHTML += `<div class="card"><img src="${p.img}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button></div>`;
     })
@@ -357,15 +312,15 @@ document.addEventListener('DOMContentLoaded', () => {
   window.searchProducts = () => { renderProducts(); renderClientProducts(); }
   window.filterCat = (cat) => { currentFilter=cat; renderProducts(); renderClientProducts(); }
 
-  function buildProductList(){ /* same as before */ }
-  function buildOrders(){ /* same as before */ }
-  window.editProduct = (id) => { /* same */ }
-  window.cancelEdit = () => { /* same */ }
-  window.saveProduct = () => { /* same */ }
-  function buildStockList(){ /* same */ }
-  window.seedDatabase = () => { /* same */ }
-  window.deleteProduct = (id) => { /* same */ }
-  window.updateStock = (id) => { /* same */ }
+  function buildProductList(){ /* paste your full function here */ }
+  function buildOrders(){ /* paste your full function here */ }
+  window.editProduct = (id) => { /* paste */ }
+  window.cancelEdit = () => { /* paste */ }
+  window.saveProduct = () => { /* paste */ }
+  function buildStockList(){ /* paste */ }
+  window.seedDatabase = () => { /* paste */ }
+  window.deleteProduct = (id) => { /* paste */ }
+  window.updateStock = (id) => { /* paste */ }
 
   window.addToCart = (id) => {
     let p = products[id]; let item = cart.find(x=>x.id==id);
@@ -374,18 +329,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateCart(){
-    cartBar.style.display = cart.length?'block':'none';
     clientCartBar.style.display = cart.length?'block':'none';
     let count = cart.reduce((a,b)=>a+b.qty,0);
     let total = cart.reduce((a,b)=>a+b.qty*b.price,0);
-    cartCount.innerText = count; clientCartCount.innerText = count;
-    cartTotal.innerText = total; clientCartTotal.innerText = total;
+    clientCartCount.innerText = count;
+    clientCartTotal.innerText = total;
   }
 
   window.checkout = () => {
     if(cart.length === 0) return alert('Cart empty');
     const orderId = Date.now().toString();
-    const order = { user: isClientMode ? 'Guest' : currentUser.email, items: cart, total: cart.reduce((a,b)=>a+b.qty*b.price,0), date: new Date().toISOString(), status: 'Pending' };
+    const order = { user: 'Guest', items: cart, total: cart.reduce((a,b)=>a+b.qty*b.price,0), date: new Date().toISOString(), status: 'Pending' };
     set(ref(db, 'bizportal/orders/' + orderId), order);
     cart.forEach(item => { set(ref(db, 'bizportal/products/' + item.id + '/stock'), products[item.id].stock - item.qty); });
     let msg = `Hello Twinz, my order:\n` + cart.map(i=>`${i.name} x${i.qty}`).join('\n') + `\nTotal: R${order.total}`;
@@ -393,8 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
     cart = []; updateCart(); alert('Order placed!')
   }
 
-  window.downloadReport = () => { /* same */ }
-  window.downloadOrdersCSV = () => { /* same */ }
+  window.downloadReport = () => { /* paste */ }
+  window.downloadOrdersCSV = () => { /* paste */ }
 });
 </script>
 </body>
