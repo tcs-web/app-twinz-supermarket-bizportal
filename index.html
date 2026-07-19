@@ -123,201 +123,217 @@ import { getDatabase, ref, set, onValue, remove, get, push } from 'https://www.g
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 const { jsPDF } = window.jspdf;
 
-// YOUR FIREBASE CONFIG
+// YOUR FIREBASE CONFIG - FIXED storageBucket
 const firebaseConfig = {
   apiKey: "AIzaSyCKxK7qBOGW4GzhsYxpezgXnNlRODkBA8A",
   authDomain: "app-twinz-supermarket-biz.firebaseapp.com",
   databaseURL: "https://app-twinz-supermarket-biz-default-rtdb.firebaseio.com",
   projectId: "app-twinz-supermarket-biz",
-  storageBucket: "app-twinz-supermarket-biz.firebasestorage.app",
+  storageBucket: "app-twinz-supermarket-biz.appspot.com",
   messagingSenderId: "432365483139",
   appId: "1:432365483139:web:7239d7e41a8fac55bad7b6",
   measurementId: "G-Q5TK65DEP1"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
-const productsRef = ref(db, 'bizportal/products');
+document.addEventListener('DOMContentLoaded', () => {
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+  const productsRef = ref(db, 'bizportal/products');
 
-let products = {};
-let cart = [];
-let currentUser = {role:'admin'};
-let currentFilter = 'All';
+  let products = {};
+  let cart = [];
+  let currentUser = {role:'admin'};
+  let currentFilter = 'All';
 
-window.doLogin = async () => {
-  loginError.innerText = 'Logging in...';
-  try{
-    await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
-  }catch(e){loginError.innerText = 'Login failed: ' + e.message}
-}
+  // Get elements AFTER DOM loads
+  const loginScreen = document.getElementById('loginScreen');
+  const appDiv = document.getElementById('app');
+  const loginError = document.getElementById('loginError');
+  const productGrid = document.getElementById('productGrid');
+  const productList = document.getElementById('productList');
+  const stockList = document.getElementById('stockList');
+  const searchInput = document.getElementById('searchInput');
+  const cartBar = document.getElementById('cartBar');
+  const cartCount = document.getElementById('cartCount');
+  const cartTotal = document.getElementById('cartTotal');
+  const pName = document.getElementById('pName');
+  const pCat = document.getElementById('pCat');
+  const pImg = document.getElementById('pImg');
+  const pPrice = document.getElementById('pPrice');
+  const pOldPrice = document.getElementById('pOldPrice');
+  const pStock = document.getElementById('pStock');
 
-window.logout = () => {signOut(auth)}
+  window.doLogin = async () => {
+    loginError.innerText = 'Logging in...';
+    try{
+      await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
+    }catch(e){loginError.innerText = 'Login failed: ' + e.message}
+  }
 
-onAuthStateChanged(auth, async user => {
-  if(user){
-    const roleRef = ref(db, 'bizportal/users/' + user.uid + '/role');
-    const roleSnap = await get(roleRef);
-    const role = roleSnap.val() || 'admin';
-    
-    currentUser = {email: user.email, role: role, uid: user.uid};
-    loginScreen.style.display = 'none';
-    app.style.display = 'block';
-    document.getElementById('userRole').innerText = currentUser.role.toUpperCase();
-    document.getElementById('userRole').className = 'role-badge role-' + currentUser.role;
-    
-    // Hide users tab for admin
-    if(currentUser.role == 'admin') document.getElementById('usersTab').style.display = 'none';
+  window.logout = () => {signOut(auth)}
+
+  onAuthStateChanged(auth, async user => {
+    if(user){
+      const roleRef = ref(db, 'bizportal/users/' + user.uid + '/role');
+      const roleSnap = await get(roleRef);
+      const role = roleSnap.val() || 'admin';
+      
+      currentUser = {email: user.email, role: role, uid: user.uid};
+      loginScreen.style.display = 'none';
+      appDiv.style.display = 'block';
+      document.getElementById('userRole').innerText = currentUser.role.toUpperCase();
+      document.getElementById('userRole').className = 'role-badge role-' + currentUser.role;
+      
+      if(currentUser.role == 'admin') document.getElementById('usersTab').style.display = 'none';
+      buildProductList();
+      buildStockList();
+    } else {
+      loginScreen.style.display = 'block';
+      appDiv.style.display = 'none';
+    }
+  })
+
+  window.showTab = (tab, el) => {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    ['products','stock','users','reports'].forEach(t=>{
+      document.getElementById('tab-'+t).style.display = t==tab?'block':'none'
+    })
+  }
+
+  onValue(productsRef, snap => {
+    products = snap.val() || {};
+    renderProducts();
     buildProductList();
     buildStockList();
-  } else {
-    loginScreen.style.display = 'block';
-    app.style.display = 'none';
+  })
+
+  function renderProducts(){
+    productGrid.innerHTML = '';
+    if(Object.keys(products).length === 0){
+      productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products yet. Click "Add Default Products" above</p>`;
+      return;
+    }
+    Object.entries(products).filter(([id,p])=>{
+      let matchCat = currentFilter == 'All' || p.category == currentFilter;
+      let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());
+      return matchCat && matchSearch;
+    }).forEach(([id,p])=>{
+      productGrid.innerHTML += `
+      <div class="card">
+        <img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}">
+        <h4>${p.name}</h4>
+        <div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div>
+        <div class="stock">In Stock: ${p.stock}</div>
+        ${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}
+      </div>`;
+    })
   }
-})
 
-window.showTab = (tab, el) => {
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  ['products','stock','users','reports'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display = t==tab?'block':'none'
-  })
-}
+  window.searchProducts = () => renderProducts();
+  window.filterCat = (cat) => {currentFilter=cat; renderProducts();}
 
-onValue(productsRef, snap => {
-  products = snap.val() || {};
-  renderProducts();
-  buildProductList();
-  buildStockList();
-})
-
-function renderProducts(){
-  productGrid.innerHTML = '';
-  if(Object.keys(products).length === 0){
-    productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products yet. Click "Add Default Products" above</p>`;
-    return;
+  function buildProductList(){
+    if(currentUser.role == 'admin') return;
+    productList.innerHTML = '';
+    Object.entries(products).forEach(([id,p])=>{
+      productList.innerHTML += `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0">
+        <b>${p.name}</b> - R${p.price} - Stock: ${p.stock} 
+        ${currentUser.role!= 'admin'? `<button onclick="deleteProduct('${id}')" style="float:right" class="btn">Del</button>` : ''}
+      </div>`;
+    })
   }
-  Object.entries(products).filter(([id,p])=>{
-    let matchCat = currentFilter == 'All' || p.category == currentFilter;
-    let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());
-    return matchCat && matchSearch;
-  }).forEach(([id,p])=>{
-    productGrid.innerHTML += `
-    <div class="card">
-      <img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}">
-      <h4>${p.name}</h4>
-      <div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div>
-      <div class="stock">In Stock: ${p.stock}</div>
-      ${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}
-    </div>`;
-  })
-}
 
-window.searchProducts = () => renderProducts();
-window.filterCat = (cat) => {currentFilter=cat; renderProducts();}
+  function buildStockList(){
+    stockList.innerHTML = '';
+    Object.entries(products).forEach(([id,p])=>{
+      stockList.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0">
+        <div><b>${p.name}</b><br><small>Stock: ${p.stock}</small></div>
+        <div><input type="number" id="stock_${id}" value="0" style="width:80px">
+        <button class="btn-green" onclick="updateStock('${id}')">+ Add</button></div>
+      </div>`;
+    })
+  }
 
-function buildProductList(){
-  if(currentUser.role == 'admin') return;
-  productList.innerHTML = '';
-  Object.entries(products).forEach(([id,p])=>{
-    productList.innerHTML += `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0">
-      <b>${p.name}</b> - R${p.price} - Stock: ${p.stock} 
-      ${currentUser.role!= 'admin'? `<button onclick="deleteProduct('${id}')" style="float:right" class="btn">Del</button>` : ''}
-    </div>`;
-  })
-}
+  window.saveProduct = () => {
+    if(currentUser.role == 'admin') return alert('No permission');
+    let id = Date.now().toString();
+    set(ref(db, 'bizportal/products/' + id), {
+      name:pName.value, category:pCat.value, img:pImg.value, 
+      price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value)
+    });
+    [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
+  }
 
-function buildStockList(){
-  stockList.innerHTML = '';
-  Object.entries(products).forEach(([id,p])=>{
-    stockList.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0">
-      <div><b>${p.name}</b><br><small>Stock: ${p.stock}</small></div>
-      <div><input type="number" id="stock_${id}" value="0" style="width:80px">
-      <button class="btn-green" onclick="updateStock('${id}')">+ Add</button></div>
-    </div>`;
-  })
-}
+  window.seedDatabase = () => {
+    if(currentUser.role != 'ceo' && currentUser.role != 'manager') return alert('No permission');
+    const defaultData = [
+      {name:"White Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Milk 1L Full Cream", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Coca Cola 2L", category:"Drinks", price:25, oldPrice:30, stock:100, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Orange Juice 1L", category:"Drinks", price:30, oldPrice:35, stock:40, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"White Rice 5kg", category:"Groceries", price:120, oldPrice:150, stock:30, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Sunflower Oil 750ml", category:"Groceries", price:45, oldPrice:50, stock:45, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Simba Chips 125g", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},
+      {name:"Chocolate Bar", category:"Snacks", price:12, oldPrice:15, stock:90, img:"https://files.catbox.moe/0zympr.jpeg"}
+    ];
+    defaultData.forEach(p=>{
+      let id = Date.now().toString() + Math.random();
+      set(ref(db, 'bizportal/products/' + id), p);
+    });
+    alert('8 Default products added to Firebase!')
+  }
 
-window.saveProduct = () => {
-  if(currentUser.role == 'admin') return alert('No permission');
-  let id = Date.now().toString();
-  set(ref(db, 'bizportal/products/' + id), {
-    name:pName.value, category:pCat.value, img:pImg.value, 
-    price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value)
-  });
-  [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
-}
+  window.deleteProduct = (id) => {
+    if(currentUser.role!= 'ceo') return alert('CEO only');
+    if(confirm('Delete?')) remove(ref(db, 'bizportal/products/' + id))
+  }
 
-window.seedDatabase = () => {
-  if(currentUser.role != 'ceo' && currentUser.role != 'manager') return alert('No permission');
-  const defaultData = [
-    {name:"White Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Milk 1L Full Cream", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Coca Cola 2L", category:"Drinks", price:25, oldPrice:30, stock:100, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Orange Juice 1L", category:"Drinks", price:30, oldPrice:35, stock:40, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"White Rice 5kg", category:"Groceries", price:120, oldPrice:150, stock:30, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Sunflower Oil 750ml", category:"Groceries", price:45, oldPrice:50, stock:45, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Simba Chips 125g", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Chocolate Bar", category:"Snacks", price:12, oldPrice:15, stock:90, img:"https://files.catbox.moe/0zympr.jpeg"}
-  ];
-  defaultData.forEach(p=>{
-    let id = Date.now().toString() + Math.random();
-    set(ref(db, 'bizportal/products/' + id), p);
-  });
-  alert('8 Default products added to Firebase!')
-}
+  window.updateStock = (id) => {
+    let add = parseInt(document.getElementById('stock_'+id).value);
+    set(ref(db, 'bizportal/products/' + id + '/stock'), products[id].stock + add);
+  }
 
-window.deleteProduct = (id) => {
-  if(currentUser.role!= 'ceo') return alert('CEO only');
-  if(confirm('Delete?')) remove(ref(db, 'bizportal/products/' + id))
-}
+  window.addToCart = (id) => {
+    let p = products[id];
+    let item = cart.find(x=>x.id==id);
+    if(item){item.qty++} else {cart.push({id,name:p.name,price:p.price,qty:1})}
+    updateCart();
+  }
 
-window.updateStock = (id) => {
-  let add = parseInt(document.getElementById('stock_'+id).value);
-  set(ref(db, 'bizportal/products/' + id + '/stock'), products[id].stock + add);
-}
+  function updateCart(){
+    cartBar.style.display = cart.length?'block':'none';
+    cartCount.innerText = cart.reduce((a,b)=>a+b.qty,0);
+    cartTotal.innerText = cart.reduce((a,b)=>a+b.qty*b.price,0);
+  }
 
-window.addToCart = (id) => {
-  let p = products[id];
-  let item = cart.find(x=>x.id==id);
-  if(item){item.qty++} else {cart.push({id,name:p.name,price:p.price,qty:1})}
-  updateCart();
-}
+  window.checkout = () => {
+    if(cart.length === 0) return alert('Cart empty');
+    const orderId = Date.now().toString();
+    const order = {
+      user: currentUser.email, 
+      items: cart, 
+      total: cart.reduce((a,b)=>a+b.qty*b.price,0), 
+      date: new Date().toISOString(), 
+      status: 'Pending'
+    };
+    set(ref(db, 'bizportal/orders/' + orderId), order);
+    cart.forEach(item => {
+      set(ref(db, 'bizportal/products/' + item.id + '/stock'), products[item.id].stock - item.qty);
+    });
+    let msg = `Hello Twinz, my order:\n` + cart.map(i=>`${i.name} x${i.qty}`).join('\n') + `\nTotal: R${order.total}`;
+    window.open(`https://wa.me/27682547352?text=${encodeURIComponent(msg)}`);
+    cart = []; updateCart(); alert('Order placed!')
+  }
 
-function updateCart(){
-  cartBar.style.display = cart.length?'block':'none';
-  cartCount.innerText = cart.reduce((a,b)=>a+b.qty,0);
-  cartTotal.innerText = cart.reduce((a,b)=>a+b.qty*b.price,0);
-}
-
-window.checkout = () => {
-  if(cart.length === 0) return alert('Cart empty');
-  const orderId = Date.now().toString();
-  const order = {
-    user: currentUser.email, 
-    items: cart, 
-    total: cart.reduce((a,b)=>a+b.qty*b.price,0), 
-    date: new Date().toISOString(), 
-    status: 'Pending'
-  };
-  set(ref(db, 'bizportal/orders/' + orderId), order);
-  
-  // Reduce stock
-  cart.forEach(item => {
-    set(ref(db, 'bizportal/products/' + item.id + '/stock'), products[item.id].stock - item.qty);
-  });
-  
-  let msg = `Hello Twinz, my order:\n` + cart.map(i=>`${i.name} x${i.qty}`).join('\n') + `\nTotal: R${order.total}`;
-  window.open(`https://wa.me/27682547352?text=${encodeURIComponent(msg)}`);
-  cart = []; updateCart(); alert('Order placed!')
-}
-
-window.downloadReport = () => {
-  const doc = new jsPDF();
-  doc.text("Twinz Bizportal Report", 10, 10);
-  doc.text(`Total Products: ${Object.keys(products).length}`, 10, 20);
-  doc.save("report.pdf");
-}
+  window.downloadReport = () => {
+    const doc = new jsPDF();
+    doc.text("Twinz Bizportal Report", 10, 10);
+    doc.text(`Total Products: ${Object.keys(products).length}`, 10, 20);
+    doc.save("report.pdf");
+  }
+});
 </script>
 </body>
 </html>
