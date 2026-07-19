@@ -56,13 +56,11 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
     <input type="email" id="loginEmail" placeholder="Email">
     <input type="password" id="loginPass" placeholder="Password">
     <button class="btn" onclick="doLogin()" style="width:100%">Login</button>
-    <button class="btn btn-blue" onclick="registerUser()" style="width:100%;margin-top:8px">Create Account</button> <!-- ADDED -->
     <p style="font-size:11px;color:var(--muted);margin-top:10px">
-      <b>Demo:</b><br>
-      CEO: ceo@twinz.com / 123456<br>
-      Manager: manager@twinz.com / 123456<br>
-      Admin: admin@twinz.com / 123456<br>
-      <b>OR Create new account with Firebase</b>
+      <b>Login with Firebase Auth:</b><br>
+      CEO: ceo@twinz.co.za<br>
+      Manager: mgr@twinz.co.za<br>
+      Admin: admin@twinz.co.za
     </p>
   </div>
 </div>
@@ -101,7 +99,7 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
 
       <div id="tab-products">
         <h3>➕ Add Product</h3>
-        <button class="btn-purple" onclick="addDemoProducts()" style="margin-bottom:10px">⚡ Add 5 Demo Products</button> <!-- ADDED -->
+        <button class="btn-purple" onclick="seedDatabase()" style="margin-bottom:10px">⚡ Seed Default Categories + Products</button>
         <input type="text" id="pName" placeholder="Product Name">
         <select id="pCat"><option>Food</option><option>Drinks</option><option>Groceries</option><option>Snacks</option></select>
         <input type="text" id="pImg" placeholder="Catbox Image URL">
@@ -143,7 +141,7 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js'; // ADDED
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js'; // ADDED AUTH
 
 const { jsPDF } = window.jspdf;
 
@@ -165,50 +163,18 @@ let cart = [];
 let currentUser = {role:'admin'};
 let currentFilter = 'All';
 
-// DEMO USERS - Still works
-const USERS = {
-  'ceo@twinz.com': {pass:'123456', role:'ceo'},
-  'manager@twinz.com': {pass:'123456', role:'manager'},
-  'admin@twinz.com': {pass:'123456', role:'admin'}
-}
+// REMOVED DEMO USERS - Using Firebase Auth now
 
 window.doLogin = () => {
-  let email = loginEmail.value;
-  let pass = loginPass.value;
-
-  // Try Firebase Auth first
-  signInWithEmailAndPassword(auth, email, pass).then(()=>{}).catch(()=>{
-    // If Firebase fails, use Demo users
-    if(USERS[email] && USERS[email].pass == pass){
-      currentUser = {email, role:USERS[email].role};
-      loginScreen.style.display = 'none';
-      app.style.display = 'block';
-      document.getElementById('userRole').innerText = currentUser.role.toUpperCase();
-      document.getElementById('userRole').className = 'role-badge role-' + currentUser.role;
-      if(currentUser.role == 'admin'){document.getElementById('tab-users').style.display='none'}
-    } else {alert('Invalid login')}
-  })
+  signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value)
+  .catch(e=>alert('Login failed: ' + e.message))
 }
 
-// ADDED: Firebase Register
-window.registerUser = () => {
-  createUserWithEmailAndPassword(auth, loginEmail.value, loginPass.value)
- .then(cred=>{
-    set(ref(db, 'bizportal/users/' + cred.user.uid), {email: cred.user.email, role: 'admin'});
-    alert('Account created! Default role: admin. Change role in Firebase to ceo/manager')
-  })
- .catch(e=>alert('Register failed: ' + e.message))
-}
+window.logout = () => {signOut(auth)}
 
-// ADDED: Firebase Logout
-window.logout = () => {
-  signOut(auth).then(()=>location.reload()).catch(()=>location.reload())
-}
-
-// ADDED: Check if Firebase user is logged in
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, user => { // ADDED
   if(user){
-    // Get role from Firebase
+    // Get role from database
     onValue(ref(db, 'bizportal/users/' + user.uid + '/role'), snap=>{
       currentUser = {email: user.email, role: snap.val() || 'admin'};
       loginScreen.style.display = 'none';
@@ -217,6 +183,9 @@ onAuthStateChanged(auth, user => {
       document.getElementById('userRole').className = 'role-badge role-' + currentUser.role;
       if(currentUser.role == 'admin'){document.getElementById('tab-users').style.display='none'}
     })
+  } else {
+    loginScreen.style.display = 'block';
+    app.style.display = 'none';
   }
 })
 
@@ -238,7 +207,7 @@ onValue(productsRef, snap => {
 function renderProducts(){
   productGrid.innerHTML = '';
   if(Object.keys(products).length === 0){
-    productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products. Login as CEO/Manager and click "Add Demo Products"</p>`
+    productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products. Login as CEO and click "Seed Default Categories + Products"</p>`
     return;
   }
   Object.entries(products).filter(([id,p])=>{
@@ -300,18 +269,24 @@ window.saveProduct = () => {
   [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
 }
 
-// ADDED: Demo Products
-window.addDemoProducts = () => {
-  if(currentUser.role == 'admin') return alert('No permission');
-  const demo = [
-    {name:"Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Coke 2L", category:"Drinks", price:25, oldPrice:30, stock:100, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Rice 5kg", category:"Groceries", price:120, oldPrice:150, stock:30, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Chips", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},
-    {name:"Milk 1L", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"}
+// ADDED: Seed default data to your Firebase
+window.seedDatabase = () => {
+  if(currentUser.role != 'ceo') return alert('CEO only');
+  const defaultData = [
+    {name:"White Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Milk 1L Full Cream", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Coca Cola 2L", category:"Drinks", price:25, oldPrice:30, stock:100, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Orange Juice 1L", category:"Drinks", price:30, oldPrice:35, stock:40, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"White Rice 5kg", category:"Groceries", price:120, oldPrice:150, stock:30, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Sunflower Oil 750ml", category:"Groceries", price:45, oldPrice:50, stock:45, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Simba Chips 125g", category:"Snacks", price:15, oldPrice:18, stock:80, img:"https://files.catbox.moe/0zympr.jpeg"},
+    {name:"Chocolate Bar", category:"Snacks", price:12, oldPrice:15, stock:90, img:"https://files.catbox.moe/0zympr.jpeg"}
   ];
-  demo.forEach(p=>{let id = Date.now().toString() + Math.random(); set(ref(db, 'bizportal/products/' + id), p);});
-  alert('5 Demo products added!')
+  defaultData.forEach(p=>{
+    let id = Date.now().toString() + Math.random();
+    set(ref(db, 'bizportal/products/' + id), p);
+  });
+  alert('Default products added to https://app-twinz-supermarket-biz-default-rtdb.firebaseio.com/')
 }
 
 window.deleteProduct = (id) => {
