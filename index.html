@@ -7,7 +7,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 :root{
-  --bg:#f5f5f5;--card:#fff;--accent:#ff4747;--accent2:#ff9500;--green:#00b894;--blue:#0984e3;--purple:#6c5ce7; /* FIXED */
+  --bg:#f5f5f5;--card:#fff;--accent:#ff4747;--accent2:#ff9500;--green:#00b894;--blue:#0984e3;--purple:#6c5ce7;
   --text:#2d3436;--muted:#636e72;--border:#dfe6e9;--shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 *{box-sizing:border-box;font-family:'Poppins',sans-serif}
@@ -29,7 +29,6 @@ body{margin:0;background:var(--bg);color:var(--text)}
 .old-price{text-decoration:line-through;color:var(--muted);font-size:11px}
 .stock{font-size:10px;color:var(--green)}
 .btn-cart{background:var(--accent);color:#fff;border:none;width:100%;padding:8px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:5px}
-.btn-cart:active{transform:scale(0.95)}
 
 .admin{background:#fff;padding:15px;border-radius:12px;margin:15px 0;box-shadow:var(--shadow)}
 .login-box{max-width:400px;margin:40px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:var(--shadow)}
@@ -56,12 +55,6 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
     <input type="email" id="loginEmail" placeholder="Email">
     <input type="password" id="loginPass" placeholder="Password">
     <button class="btn" onclick="doLogin()" style="width:100%">Login</button>
-    <p style="font-size:11px;color:var(--muted);margin-top:10px">
-      <b>Login with Firebase Auth:</b><br>
-      CEO: ceo@twinz.co.za<br>
-      Manager: mgr@twinz.co.za<br>
-      Admin: admin@twinz.co.za
-    </p>
   </div>
 </div>
 
@@ -69,13 +62,8 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
   <div class="header">
     <div class="header-top">
       <img src="https://files.catbox.moe/0zympr.jpeg" class="logo">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search in Twinz Supermarket..." onkeyup="searchProducts()">
-      </div>
-      <div>
-        <span class="role-badge" id="userRole">ADMIN</span>
-        <button class="btn" style="padding:5px 10px;font-size:12px" onclick="logout()">Logout</button>
-      </div>
+      <div class="search-box"><input type="text" id="searchInput" placeholder="Search in Twinz Supermarket..." onkeyup="searchProducts()"></div>
+      <div><span class="role-badge" id="userRole">ADMIN</span><button class="btn" style="padding:5px 10px;font-size:12px" onclick="logout()">Logout</button></div>
     </div>
     <div class="nav-cats">
       <button onclick="filterCat('All')">All</button>
@@ -99,7 +87,6 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
 
       <div id="tab-products">
         <h3>➕ Add Product</h3>
-        <button class="btn-purple" onclick="seedDatabase()" style="margin-bottom:10px">⚡ Seed Default Categories + Products</button>
         <input type="text" id="pName" placeholder="Product Name">
         <select id="pCat"><option>Food</option><option>Drinks</option><option>Groceries</option><option>Snacks</option></select>
         <input type="text" id="pImg" placeholder="Catbox Image URL">
@@ -110,42 +97,26 @@ input,select{width:100%;padding:10px;margin:6px 0;border:1px solid var(--border)
         <div id="productList" style="margin-top:15px"></div>
       </div>
 
-      <div id="tab-stock" style="display:none">
-        <h3>📦 Stock Management</h3>
-        <div id="stockList"></div>
-      </div>
-
-      <div id="tab-users" style="display:none">
-        <h3>👥 Users & Roles</h3>
-        <p><b>CEO:</b> Full access + Delete products + Manage users</p>
-        <p><b>Manager:</b> Add/Edit products + View reports</p>
-        <p><b>Admin:</b> Update stock only</p>
-      </div>
-
-      <div id="tab-reports" style="display:none">
-        <h3>📊 Reports</h3>
-        <button class="btn-purple" onclick="downloadReport()">Download PDF Report</button>
-      </div>
+      <div id="tab-stock" style="display:none"><h3>📦 Stock Management</h3><div id="stockList"></div></div>
+      <div id="tab-users" style="display:none"><h3>👥 Users & Roles</h3><p><b>CEO:</b> Full access + Delete products</p><p><b>Manager:</b> Add/Edit products</p><p><b>Admin:</b> Update stock only</p></div>
+      <div id="tab-reports" style="display:none"><h3>📊 Reports</h3><button class="btn-purple" onclick="downloadReport()">Download PDF Report</button></div>
     </div>
 
     <h2 style="margin:20px 0">🛒 Trending Products</h2>
     <div class="grid" id="productGrid"></div>
   </div>
 
-  <div class="cart-bar" id="cartBar">
-    <b>Cart: <span id="cartCount">0</span> items | R<span id="cartTotal">0</span></b>
-    <button class="btn" onclick="checkout()">Order via WhatsApp</button>
-  </div>
+  <div class="cart-bar" id="cartBar"><b>Cart: <span id="cartCount">0</span> items | R<span id="cartTotal">0</span></b><button class="btn" onclick="checkout()">Order via WhatsApp</button></div>
 </div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, set, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js'; // ADDED AUTH
+import { getDatabase, ref, set, onValue, remove, get, child } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 const { jsPDF } = window.jspdf;
 
-// 🔥 YOUR FIREBASE CONFIG
+// 🔥 CONNECTED TO YOUR FIREBASE CLIENT
 const firebaseConfig = {
   apiKey: "AIzaSyCKxK7qBOGW4GzhsYxpezgXnNlRODkBA8A",
   authDomain: "app-twinz-supermarket-biz.firebaseapp.com",
@@ -155,33 +126,39 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const auth = getAuth(app); // ADDED
+const auth = getAuth(app);
 const productsRef = ref(db, 'bizportal/products');
 
 let products = {};
 let cart = [];
 let currentUser = {role:'admin'};
 let currentFilter = 'All';
-
-// REMOVED DEMO USERS - Using Firebase Auth now
+let seeded = false;
 
 window.doLogin = () => {
-  signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value)
-  .catch(e=>alert('Login failed: ' + e.message))
+  signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value).catch(e=>alert('Login failed: ' + e.message))
 }
 
 window.logout = () => {signOut(auth)}
 
-onAuthStateChanged(auth, user => { // ADDED
+onAuthStateChanged(auth, async user => {
   if(user){
-    // Get role from database
-    onValue(ref(db, 'bizportal/users/' + user.uid + '/role'), snap=>{
+    onValue(ref(db, 'bizportal/users/' + user.uid + '/role'), async snap=>{
       currentUser = {email: user.email, role: snap.val() || 'admin'};
       loginScreen.style.display = 'none';
       app.style.display = 'block';
       document.getElementById('userRole').innerText = currentUser.role.toUpperCase();
       document.getElementById('userRole').className = 'role-badge role-' + currentUser.role;
       if(currentUser.role == 'admin'){document.getElementById('tab-users').style.display='none'}
+      
+      // AUTO SEED IF EMPTY AND USER IS CEO
+      if(currentUser.role == 'ceo' && !seeded){
+        const snap = await get(productsRef);
+        if(!snap.exists()){
+          seedDatabase();
+        }
+        seeded = true;
+      }
     })
   } else {
     loginScreen.style.display = 'block';
@@ -207,7 +184,7 @@ onValue(productsRef, snap => {
 function renderProducts(){
   productGrid.innerHTML = '';
   if(Object.keys(products).length === 0){
-    productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">No products. Login as CEO and click "Seed Default Categories + Products"</p>`
+    productGrid.innerHTML = `<p style="text-align:center;grid-column:1/-1">Loading products from Firebase...</p>`
     return;
   }
   Object.entries(products).filter(([id,p])=>{
@@ -215,15 +192,7 @@ function renderProducts(){
     let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());
     return matchCat && matchSearch;
   }).forEach(([id,p])=>{
-    productGrid.innerHTML += `
-      <div class="card">
-        <img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}">
-        <h4>${p.name}</h4>
-        <div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div>
-        <div class="stock">In Stock: ${p.stock}</div>
-        ${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}
-      </div>
-    `;
+    productGrid.innerHTML += `<div class="card"><img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><div class="stock">In Stock: ${p.stock}</div>${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}</div>`;
   })
 }
 
@@ -234,44 +203,26 @@ function buildProductList(){
   if(currentUser.role == 'admin') return;
   productList.innerHTML = '';
   Object.entries(products).forEach(([id,p])=>{
-    productList.innerHTML += `
-      <div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0">
-        <b>${p.name}</b> - R${p.price} - Stock: ${p.stock}
-        ${currentUser.role!= 'admin'? `<button onclick="deleteProduct('${id}')" style="float:right" class="btn">Del</button>` : ''}
-      </div>
-    `;
+    productList.innerHTML += `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0"><b>${p.name}</b> - R${p.price} - Stock: ${p.stock} ${currentUser.role!= 'admin'? `<button onclick="deleteProduct('${id}')" style="float:right" class="btn">Del</button>` : ''}</div>`;
   })
 }
 
 function buildStockList(){
   stockList.innerHTML = '';
   Object.entries(products).forEach(([id,p])=>{
-    stockList.innerHTML += `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0">
-        <div><b>${p.name}</b><br><small>Stock: ${p.stock}</small></div>
-        <div>
-          <input type="number" id="stock_${id}" value="0" style="width:80px">
-          <button class="btn-green" onclick="updateStock('${id}')">+ Add</button>
-        </div>
-      </div>
-    `;
+    stockList.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin:5px 0"><div><b>${p.name}</b><br><small>Stock: ${p.stock}</small></div><div><input type="number" id="stock_${id}" value="0" style="width:80px"><button class="btn-green" onclick="updateStock('${id}')">+ Add</button></div></div>`;
   })
 }
 
 window.saveProduct = () => {
   if(currentUser.role == 'admin') return alert('No permission');
   let id = Date.now().toString();
-  let data = {
-    name:pName.value, category:pCat.value, img:pImg.value,
-    price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value)
-  };
-  set(ref(db, 'bizportal/products/' + id), data);
+  set(ref(db, 'bizportal/products/' + id), {name:pName.value, category:pCat.value, img:pImg.value, price:parseInt(pPrice.value), oldPrice:parseInt(pOldPrice.value)||0, stock:parseInt(pStock.value)});
   [pName,pImg,pPrice,pOldPrice,pStock].forEach(i=>i.value='');
 }
 
-// ADDED: Seed default data to your Firebase
-window.seedDatabase = () => {
-  if(currentUser.role != 'ceo') return alert('CEO only');
+// AUTO SEED DEFAULT CATEGORIES + PRODUCTS TO FIREBASE
+function seedDatabase() {
   const defaultData = [
     {name:"White Bread 700g", category:"Food", price:18, oldPrice:22, stock:50, img:"https://files.catbox.moe/0zympr.jpeg"},
     {name:"Milk 1L Full Cream", category:"Food", price:28, oldPrice:32, stock:60, img:"https://files.catbox.moe/0zympr.jpeg"},
@@ -286,7 +237,7 @@ window.seedDatabase = () => {
     let id = Date.now().toString() + Math.random();
     set(ref(db, 'bizportal/products/' + id), p);
   });
-  alert('Default products added to https://app-twinz-supermarket-biz-default-rtdb.firebaseio.com/')
+  alert('Default categories and products added to Firebase!')
 }
 
 window.deleteProduct = (id) => {
@@ -296,8 +247,7 @@ window.deleteProduct = (id) => {
 
 window.updateStock = (id) => {
   let add = parseInt(document.getElementById('stock_'+id).value);
-  let newStock = products[id].stock + add;
-  set(ref(db, 'bizportal/products/' + id + '/stock'), newStock);
+  set(ref(db, 'bizportal/products/' + id + '/stock'), products[id].stock + add);
 }
 
 window.addToCart = (id) => {
