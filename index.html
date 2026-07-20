@@ -515,6 +515,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+ // FORCE CLEAR CACHE ONCE
+if('caches' in window){
+  caches.keys().then(names => names.forEach(name => caches.delete(name)));
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+}
+localStorage.clear();
+sessionStorage.clear();
+console.log("Cache cleared"); 
 </script>
 </body>
 </html>
