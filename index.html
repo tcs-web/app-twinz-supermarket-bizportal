@@ -348,7 +348,8 @@ document.addEventListener('DOMContentLoaded', () => {
       let matchSearch = p.name.toLowerCase().includes(searchInput.value.toLowerCase());
       return matchCat && matchSearch;
     }).forEach(([id,p])=>{
-      productGrid.innerHTML += `<div class="card"><img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><div class="stock ${p.stock<10?'stock-low':''}">Stock: ${p.stock}</div>${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}</div>`;
+      let imgSrc = p.img && p.img.trim() !== '' ? p.img : 'https://files.catbox.moe/0zympr.jpeg';
+      productGrid.innerHTML += `<div class="card"><img src="${imgSrc}" loading="lazy" onerror="this.onerror=null;this.src='https://files.catbox.moe/0zympr.jpeg'"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><div class="stock ${p.stock<10?'stock-low':''}">Stock: ${p.stock}</div>${p.stock > 0? `<button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button>` : `<button class="btn-cart" style="background:#ccc" disabled>Out of Stock</button>`}</div>`;
     })
   }
 
@@ -361,9 +362,12 @@ document.addEventListener('DOMContentLoaded', () => {
       let matchSearch = p.name.toLowerCase().includes(clientSearchInput.value.toLowerCase());
       return matchCat && matchSearch && p.stock > 0;
     }).forEach(([id,p])=>{
-      clientProductGrid.innerHTML += `<div class="card"><img src="${p.img || 'https://files.catbox.moe/0zympr.jpeg'}"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button></div>`;
+      let imgSrc = p.img && p.img.trim() !== '' ? p.img : 'https://files.catbox.moe/0zympr.jpeg';
+      clientProductGrid.innerHTML += `<div class="card"><img src="${imgSrc}" loading="lazy" onerror="this.onerror=null;this.src='https://files.catbox.moe/0zympr.jpeg'"><h4>${p.name}</h4><div class="price">R${p.price} ${p.oldPrice? `<span class="old-price">R${p.oldPrice}</span>`:''}</div><button class="btn-cart" onclick="addToCart('${id}')">Add to Cart</button></div>`;
     })
   }
+
+  
 
   window.searchProducts = () => { renderProducts(); renderClientProducts(); }
   window.filterCat = (cat) => { currentFilter=cat; renderProducts(); renderClientProducts(); }
